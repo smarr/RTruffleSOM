@@ -1,5 +1,6 @@
 from .expression_node import ExpressionNode
-from som.vmobjects.object import Object
+from som.vmobjects.abstract_object import AbstractObject
+from som.vmobjects.object          import Object
 
 
 class _AbstractFieldNode(ExpressionNode):
@@ -81,6 +82,7 @@ class _AbstractFieldWriteNode(_AbstractFieldNode):
         self_obj = self._self_exp.execute(frame)
         value    = self._value_exp.execute(frame)
         assert isinstance(self_obj, Object)
+        assert isinstance(value, AbstractObject)
         self.write(self_obj, value)
         return value
     
