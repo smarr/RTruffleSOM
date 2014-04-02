@@ -8,8 +8,8 @@ class SequenceNode(ExpressionNode):
     _immutable_fields_ = ['_exprs?[*]']
     _child_nodes_      = ['_exprs[*]']
 
-    def __init__(self, expressions, source_section = None):
-        ExpressionNode.__init__(self, source_section)
+    def __init__(self, expressions, executes_enforced, source_section):
+        ExpressionNode.__init__(self, executes_enforced, source_section)
         self._exprs = self.adopt_children(expressions)
 
     def execute(self, frame):

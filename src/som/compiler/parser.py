@@ -369,10 +369,8 @@ class Parser(object):
         if len(exprs_unenforced) == 1:
             return exprs_enforced[0], exprs_unenforced[0]
 
-        seq_enforced   = SequenceNode(exprs_enforced[:])
-        seq_unenforced = SequenceNode(exprs_unenforced[:])
-        return self._assign_source(seq_enforced,   coordinate),\
-               self._assign_source(seq_unenforced, coordinate)
+        return SequenceNode(exprs_enforced[:],   True,  self._get_source_section(coordinate)),\
+               SequenceNode(exprs_unenforced[:], False, self._get_source_section(coordinate))
 
     def _result(self, mgenc):
         enforced, unenforced = self._expression(mgenc)

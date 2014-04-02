@@ -47,7 +47,7 @@ class CachedGlobalReadNode(ExpressionNode):
     _immutable_fields_ = ['_assoc']
 
     def __init__(self, assoc, source_section):
-        ExpressionNode.__init__(self, source_section)
+        ExpressionNode.__init__(self, False, source_section)
         self._assoc = assoc
 
     def execute(self, frame):
