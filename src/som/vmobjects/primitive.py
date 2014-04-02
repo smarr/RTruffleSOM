@@ -1,4 +1,5 @@
 from som.vmobjects.abstract_object    import AbstractObject
+from som.vmobjects.domain import request_primitive_execution
 
 
 class Primitive(AbstractObject):
@@ -20,7 +21,7 @@ class Primitive(AbstractObject):
         return self._universe
 
     def invoke_enforced(self, rcvr, args, executing_domain):
-        return executing_domain.request_primitive_execution(self, rcvr, args)
+        return request_primitive_execution(executing_domain, self, rcvr, args)
 
     def invoke_enforced_void(self, rcvr, args, executing_domain):
         self.invoke_enforced(rcvr, args, executing_domain)
