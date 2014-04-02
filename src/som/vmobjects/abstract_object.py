@@ -30,7 +30,7 @@ class AbstractObject(object):
         ##       this needs to be confirmed after all that is fixed
         arguments_array = universe.new_array_with_length(number_of_arguments,
                                                          domain)
-        for i in range(0, number_of_arguments):
+        for i in range(0, number_of_arguments - 1):
             arguments_array.set_indexable_field(i, arguments[i])
         args = [selector, arguments_array]
         return args
