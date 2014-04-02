@@ -3,7 +3,6 @@ from rpython.rlib import jit
 
 from som.vm.symbol_table         import SymbolTable
 from som.vmobjects.object        import Object
-from som.vmobjects.domain        import Domain
 from som.vmobjects.clazz         import Class
 from som.vmobjects.array         import Array
 from som.vmobjects.symbol        import Symbol
@@ -198,9 +197,8 @@ class Universe(object):
     def _initialize_object_system(self):
         # Allocate the nil object
         self.nilObject = Object(None)
-        self.standardDomain = Domain(self.nilObject,
-                                     self.nilObject,
-                                     self.nilObject)
+        self.standardDomain = Object(self.nilObject, 1, None, self.nilObject)
+        self.standardDomain.set_domain(self.standardDomain)
 
         # Allocate the Metaclass classes
         self.metaclassClass = self.new_metaclass_class(self.standardDomain)
