@@ -74,6 +74,11 @@ def _instVarAtPut(ivkbl, rcvr, args, domain):
     return val
 
 
+def _instVarNamed(ivkbl, rcvr, args, domain):
+    i = rcvr.get_field_index(args[0])
+    return rcvr.get_field(i)
+
+
 def _halt(ivkbl, rcvr, args, domain):
     # noop
     print "BREAKPOINT"
@@ -96,6 +101,7 @@ class ObjectPrimitives(Primitives):
         self._install_instance_primitive(Primitive("perform:withArguments:", self._universe, _performWithArguments))
         self._install_instance_primitive(Primitive("instVarAt:", self._universe, _instVarAt))
         self._install_instance_primitive(Primitive("instVarAt:put:", self._universe, _instVarAtPut))
+        self._install_instance_primitive(Primitive("instVarNamed:",  self._universe, _instVarNamed))
         
         self._install_instance_primitive(Primitive("halt", self._universe, _halt))
         self._install_instance_primitive(Primitive("class", self._universe, _class))
