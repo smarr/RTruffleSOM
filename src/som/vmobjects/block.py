@@ -63,6 +63,7 @@ def block_evaluation_primitive(num_args, universe):
 ## TODO: _invoke_void, is that missing???
 def _invoke(ivkbl, rcvr_block, args, domain):
     assert isinstance(ivkbl, Block.Evaluation)
+    assert isinstance(rcvr_block, Block)
     method = rcvr_block.get_method()
     if rcvr_block._captured_enforced:
         return method.invoke_enforced(rcvr_block, args, domain)
