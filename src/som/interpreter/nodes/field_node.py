@@ -28,8 +28,7 @@ class _AbstractUnenforcedFieldReadNode(_AbstractFieldNode):
 
 def _make_field_read_node_class(field_idx):
     class _UnenforcedFieldReadNodeI(_AbstractUnenforcedFieldReadNode):
-        @staticmethod
-        def read(self_obj):
+        def read(self, self_obj):
             return getattr(self_obj, "_field" + str(field_idx))
     return _UnenforcedFieldReadNodeI
 
@@ -98,8 +97,7 @@ class _AbstractUnenforcedFieldWriteNode(_AbstractFieldWriteNode):
 
 def _make_field_write_node_class(field_idx):
     class _UnenforcedFieldWriteNodeI(_AbstractUnenforcedFieldWriteNode):
-        @staticmethod
-        def write(self_obj, value):
+        def write(self, self_obj, value):
             return setattr(self_obj, "_field" + str(field_idx), value)
     return _UnenforcedFieldWriteNodeI
 
