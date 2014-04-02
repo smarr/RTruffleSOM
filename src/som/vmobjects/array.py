@@ -28,8 +28,10 @@ class Array(AbstractObject):
         return len(self._indexable_fields)
 
     def copy_and_extend_with(self, value, universe):
+        ## TODO: the new owner domain here should be determined by the current
+        ##       domain executing the method..., needs to be passed in
         result = Array(universe.nilObject,
-                            self.get_number_of_indexable_fields() + 1)
+                       self.get_number_of_indexable_fields() + 1, self._domain)
 
         self._copy_indexable_fields_to(result)
 
