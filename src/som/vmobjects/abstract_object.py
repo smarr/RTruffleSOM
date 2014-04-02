@@ -3,17 +3,26 @@ class AbstractObject(object):
     def __init__(self):
         pass
         
-    def send(self, selector_string, arguments, universe):
-        # Turn the selector string into a selector
+    def send_enforced(self, selector_string, arguments, universe, domain):
         selector = universe.symbol_for(selector_string)
         invokable = self.get_class(universe).lookup_invokable(selector)
-        return invokable.invoke(self, arguments)
+        return invokable.invoke_enforced(self, arguments, domain)
 
-    def send_void(self, selector_string, arguments, universe):
+    def send_enforced_void(self, selector_string, arguments, universe, domain):
+        selector = universe.symbol_for(selector_string)
+        invokable = self.get_class(universe).lookup_invokable(selector)
+        invokable.invoke_enforced_void(self, arguments, domain)
+
+    def send_unenforced(self, selector_string, arguments, universe, domain):
+        selector = universe.symbol_for(selector_string)
+        invokable = self.get_class(universe).lookup_invokable(selector)
+        return invokable.invoke_unenforced(self, arguments, domain)
+
+    def send_unenforced_void(self, selector_string, arguments, universe, domain):
         # Turn the selector string into a selector
         selector = universe.symbol_for(selector_string)
         invokable = self.get_class(universe).lookup_invokable(selector)
-        invokable.invoke_void(self, arguments)
+        invokable.invoke_unenforced_void(self, arguments, domain)
 
 
     def send_does_not_understand(self, selector, arguments, universe):
@@ -21,7 +30,6 @@ class AbstractObject(object):
         return self.send("doesNotUnderstand:arguments:", args, universe)
 
     def _prepare_dnu_arguments(self, arguments, selector, universe):
-        # Compute the number of arguments
         number_of_arguments = selector.get_number_of_signature_arguments()
         arguments_array = universe.new_array_with_length(number_of_arguments)
         for i in range(0, number_of_arguments):
@@ -34,16 +42,34 @@ class AbstractObject(object):
         return self.send_void("doesNotUnderstand:arguments:", args,
                               universe)
 
-    def send_unknown_global(self, global_name, universe):
+    def send_unknown_global_enforced(self, global_name, universe, domain):
         arguments = [global_name]
-        return self.send("unknownGlobal:", arguments, universe)
+        return self.send_enforced("unknownGlobal:", arguments, universe, domain)
 
-    def send_escaped_block(self, block, universe):
+    def send_unknown_global_unenforced(self, global_name, universe, domain):
+        arguments = [global_name]
+        return self.send_unenforced("unknownGlobal:", arguments, universe, domain)
+
+    def send_escaped_block_enforced(self, block, universe, domain):
         arguments = [block]
-        return self.send("escapedBlock:", arguments, universe)
+        return self.send_enforced("escapedBlock:", arguments, universe, domain)
+
+    def send_escaped_block_unenforced(self, block, universe, domain):
+        arguments = [block]
+        return self.send_unenforced("escapedBlock:", arguments, universe, domain)
+
 
     def get_class(self, universe):
         raise NotImplementedError("Subclasses need to implement get_class(universe).")
+
+    def has_domain(self):
+        return True
+
+    def get_domain(self, universe):
+        raise NotImplementedError("Subclasses need to implement get_domain(universe).")
+
+    def set_domain(self, domain):
+        raise NotImplementedError("Subclasses need to implement set_domain(domain).")
 
     def is_invokable(self):
         return False

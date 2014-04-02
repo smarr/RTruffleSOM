@@ -17,45 +17,45 @@ def _coerce_to_double(obj, universe):
     raise ValueError("Cannot coerce %s to Double!" % obj)
 
 
-def _asString(ivkbl, rcvr, args):
+def _asString(ivkbl, rcvr, args, domain):
     d = rcvr.get_embedded_double()
     s = formatd(d, "g", DTSF_STR_PRECISION, DTSF_ADD_DOT_0)
     return ivkbl.get_universe().new_string(s)
 
 
-def _sqrt(ivkbl, rcvr, args):
+def _sqrt(ivkbl, rcvr, args, domain):
     return ivkbl.get_universe().new_double(
         math.sqrt(rcvr.get_embedded_double()))
 
 
-def _plus(ivkbl, rcvr, args):
+def _plus(ivkbl, rcvr, args, domain):
     op1 = _coerce_to_double(args[0], ivkbl.get_universe())
     op2 = rcvr
     return ivkbl.get_universe().new_double(op1.get_embedded_double()
                                            + op2.get_embedded_double())
 
 
-def _minus(ivkbl, rcvr, args):
+def _minus(ivkbl, rcvr, args, domain):
     op1 = _coerce_to_double(args[0], ivkbl.get_universe())
     op2 = rcvr
     return ivkbl.get_universe().new_double(op2.get_embedded_double()
                                            - op1.get_embedded_double())
 
 
-def _mult(ivkbl, rcvr, args):
+def _mult(ivkbl, rcvr, args, domain):
     op1 = _coerce_to_double(args[0], ivkbl.get_universe())
     op2 = rcvr
     return ivkbl.get_universe().new_double(op2.get_embedded_double()
                                            * op1.get_embedded_double())
 
-def _doubleDiv(ivkbl, rcvr, args):
+def _doubleDiv(ivkbl, rcvr, args, domain):
     op1 = _coerce_to_double(args[0], ivkbl.get_universe())
     op2 = rcvr
     return ivkbl.get_universe().new_double(op2.get_embedded_double()
                                            / op1.get_embedded_double())
 
 
-def _mod(ivkbl, rcvr, args):
+def _mod(ivkbl, rcvr, args, domain):
     op1 = _coerce_to_double(args[0], ivkbl.get_universe())
     op2 = rcvr
     
@@ -65,7 +65,7 @@ def _mod(ivkbl, rcvr, args):
     return ivkbl.get_universe().new_double(r)
 
 
-def _equals(ivkbl, rcvr, args):
+def _equals(ivkbl, rcvr, args, domain):
     op1 = _coerce_to_double(args[0], ivkbl.get_universe())
     op2 = rcvr
     if op1.get_embedded_double() == op2.get_embedded_double():
@@ -74,7 +74,7 @@ def _equals(ivkbl, rcvr, args):
         return ivkbl.get_universe().falseObject
 
 
-def _lessThan(ivkbl, rcvr, args):
+def _lessThan(ivkbl, rcvr, args, domain):
     op1 = _coerce_to_double(args[0], ivkbl.get_universe())
     op2 = rcvr
     if op2.get_embedded_double() < op1.get_embedded_double():
@@ -83,7 +83,7 @@ def _lessThan(ivkbl, rcvr, args):
         return ivkbl.get_universe().falseObject
 
 
-def _and(ivkbl, rcvr, args):
+def _and(ivkbl, rcvr, args, domain):
     op1 = _coerce_to_double(args[0], ivkbl.get_universe())
     op2 = rcvr
     
@@ -93,7 +93,7 @@ def _and(ivkbl, rcvr, args):
     return ivkbl.get_universe().new_double(result)
 
 
-def _bitXor(ivkbl, rcvr, args):
+def _bitXor(ivkbl, rcvr, args, domain):
     op1 = _coerce_to_double(args[0], ivkbl.get_universe())
     op2 = rcvr
     
@@ -103,7 +103,7 @@ def _bitXor(ivkbl, rcvr, args):
     return ivkbl.get_universe().new_double(result)
 
 
-def _round(ivkbl, rcvr, args):
+def _round(ivkbl, rcvr, args, domain):
     int_value = int(round_double(rcvr.get_embedded_double(), 0))
     return ivkbl.get_universe().new_integer(int_value)
 

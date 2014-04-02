@@ -55,11 +55,17 @@ class Method(AbstractObject):
     def get_number_of_arguments(self):
         return self.get_signature().get_number_of_signature_arguments()
 
-    def invoke(self, receiver, args):
-        return self._invokable.invoke(receiver, args)
+    def invoke_enforced(self, receiver, args, executing_domain):
+        return self._invokable.invoke_enforced(receiver, args, executing_domain)
 
-    def invoke_void(self, receiver, args):
-        self._invokable.invoke_void(receiver, args)
+    def invoke_enforced_void(self, receiver, args, executing_domain):
+        self._invokable.invoke_enforced_void(receiver, args, executing_domain)
+
+    def invoke_unenforced(self, receiver, args, executing_domain):
+        return self._invokable.invoke_unenforced(receiver, args, executing_domain)
+
+    def invoke_unenforced_void(self, receiver, args, executing_domain):
+        self._invokable.invoke_unenforced_void(receiver, args, executing_domain)
 
     def __str__(self):
         return ("Method(" + self.get_holder().get_name().get_string() + ">>" +
@@ -75,3 +81,14 @@ class Method(AbstractObject):
         """ debug info for the jit """
         return "%s>>%s" % (self.get_holder().get_name().get_string(),
                            self.get_signature().get_string())
+
+    def get_domain(self, universe):
+        return universe.standardDomain
+
+    def set_domain(self, domain):
+        pass
+
+    def has_domain(self):
+        """ Method is a primitive type. Its objects are immutable and not owned
+            by any particular domain. """
+        return False

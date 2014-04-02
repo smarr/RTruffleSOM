@@ -15,3 +15,14 @@ class String(AbstractObject):
 
     def get_class(self, universe):
         return universe.stringClass
+
+    def get_domain(self, universe):
+        return universe.standardDomain
+
+    def set_domain(self, domain):
+        pass
+
+    def has_domain(self):
+        """ String is a primitive type. Its objects are immutable and not owned
+            by any particular domain. """
+        return False

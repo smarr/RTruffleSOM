@@ -2,12 +2,12 @@ from som.vmobjects.primitive   import Primitive
 from som.primitives.primitives import Primitives
 
 
-def _at(ivkbl, rcvr, args):
+def _at(ivkbl, rcvr, args, domain):
     i    = args[0]
     return  rcvr.get_indexable_field(i.get_embedded_integer() - 1)
 
 
-def _atPut(ivkbl, rcvr, args):
+def _atPut(ivkbl, rcvr, args, domain):
     value = args[1]
     index = args[0]
 
@@ -15,23 +15,23 @@ def _atPut(ivkbl, rcvr, args):
     return value
 
 
-def _length(ivkbl, rcvr, args):
+def _length(ivkbl, rcvr, args, domain):
     return ivkbl.get_universe().new_integer(
         rcvr.get_number_of_indexable_fields())
 
 
-def _new(ivkbl, rcvr, args):
+def _new(ivkbl, rcvr, args, domain):
     length = args[0]
 
     return ivkbl.get_universe().new_array_with_length(
-        length.get_embedded_integer())
+        length.get_embedded_integer(), domain)
 
 
 class ArrayPrimitives(Primitives):
     
     def install_primitives(self):
-        self._install_instance_primitive(Primitive("at:", self._universe, _at))
+        self._install_instance_primitive(Primitive("at:",     self._universe, _at))
         self._install_instance_primitive(Primitive("at:put:", self._universe, _atPut))
-        self._install_instance_primitive(Primitive("length", self._universe, _length))
+        self._install_instance_primitive(Primitive("length",  self._universe, _length))
         
-        self._install_class_primitive(Primitive("new:", self._universe, _new))
+        self._install_class_primitive(Primitive("new:",       self._universe, _new))

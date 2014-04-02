@@ -1,5 +1,8 @@
-from ..expression_node import ExpressionNode
 from rpython.rlib import jit
+
+from ..expression_node import ExpressionNode
+
+from som.vmobjects.block  import Block
 from som.vmobjects.method import Method
 
 
@@ -10,8 +13,8 @@ class AbstractWhileMessageNode(ExpressionNode):
     _child_nodes_      = ['_rcvr_expr', '_body_expr']
 
     def __init__(self, rcvr_expr, body_expr, predicate_bool_obj, universe,
-                 source_section):
-        ExpressionNode.__init__(self, source_section)
+                 executes_enforced, source_section):
+        ExpressionNode.__init__(self, executes_enforced, source_section)
         self._predicate_bool = predicate_bool_obj
         self._rcvr_expr      = self.adopt_child(rcvr_expr)
         self._body_expr      = self.adopt_child(body_expr)
@@ -25,7 +28,7 @@ class AbstractWhileMessageNode(ExpressionNode):
         rcvr_value = self._rcvr_expr.execute(frame)
         body_block = self._body_expr.execute(frame)
 
-        self._do_while(rcvr_value, body_block)
+        self._do_while(rcvr_value, body_block, frame.get_executing_domain())
 
 # STEFAN: SOM doesn't actually have #whileTrue:, #whileFalse: for booleans.
 
@@ -72,9 +75,9 @@ class WhileMessageNode(AbstractWhileMessageNode):
         return self._universe.nilObject
 
     def execute_evaluated_void(self, frame, rcvr, args):
-        self._do_while(rcvr, args[0])
+        self._do_while(rcvr, args[0], frame.get_executing_domain())
 
-    def _do_while(self, rcvr_block, body_block):
+    def _do_while(self, rcvr_block, body_block, domain):
         condition_method = rcvr_block.get_method()
         body_method      = body_block.get_method()
 
@@ -83,7 +86,41 @@ class WhileMessageNode(AbstractWhileMessageNode):
                                          condition_method= condition_method,
                                          node            = self)
 
-            condition_value = condition_method.invoke(rcvr_block, None)
+            if self._executes_enforced:
+                condition_value = condition_method.invoke_enforced(rcvr_block, None, domain)
+            else:
+                condition_value = condition_method.invoke_unenforced(rcvr_block, None, domain)
+
             if condition_value is not self._predicate_bool:
                 break
-            body_method.invoke_void(body_block, None)
+
+            if self._executes_enforced:
+                body_method.invoke_enforced_void(body_block, None, domain)
+            else:
+                body_method.invoke_unenforced_void(body_block, None, domain)
+
+
+    @staticmethod
+    def can_specialize(selector, rcvr, args, node):
+        sel = selector.get_string()
+        return isinstance(args[0], Block) and (sel == "whileTrue:" or
+                                               sel == "whileFalse:")
+
+    @staticmethod
+    def specialize_node(selector, rcvr, args, node):
+        sel = selector.get_string()
+        if sel == "whileTrue:":
+            return node.replace(
+                WhileMessageNode(node._rcvr_expr, node._arg_exprs[0],
+                                 node._universe.trueObject,
+                                 node._universe,
+                                 node._executes_enforced,
+                                 node._source_section))
+        else:
+            assert sel == "whileFalse:"
+            return node.replace(
+                WhileMessageNode(node._rcvr_expr, node._arg_exprs[0],
+                                 node._universe.falseObject,
+                                 node._universe,
+                                 node._executes_enforced,
+                                 node._source_section))

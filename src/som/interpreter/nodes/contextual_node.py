@@ -7,8 +7,8 @@ class ContextualNode(ExpressionNode):
 
     _immutable_fields_ = ["_context_level"]
 
-    def __init__(self, context_level, source_section = None):
-        ExpressionNode.__init__(self, source_section)
+    def __init__(self, context_level, executes_enforced, source_section = None):
+        ExpressionNode.__init__(self, executes_enforced, source_section)
         self._context_level = context_level
 
     def get_context_level(self):

@@ -45,3 +45,14 @@ class Symbol(AbstractObject):
     
     def get_class(self, universe):
         return universe.symbolClass
+
+    def get_domain(self, universe):
+        return universe.standardDomain
+
+    def set_domain(self, domain):
+        pass
+
+    def has_domain(self):
+        """ Symbol is a primitive type. Its objects are immutable and not owned
+            by any particular domain. """
+        return False

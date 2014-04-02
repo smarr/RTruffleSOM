@@ -1,14 +1,15 @@
 from rpython.rlib import jit
-from rtruffle.node import Node
 
 from .frame import Frame
+from rtruffle.node import Node
+from som.interpreter.nodes.som_node import SOMNode
 
 
-def get_printable_location(invokable):
+def get_printable_location(invokable, executing_domain):
     return invokable._source_section._identifier
 
 jitdriver = jit.JitDriver(
-     greens=['self'],
+     greens=['self', 'executing_domain'],
      # virtualizables=['caller_frame'])
       get_printable_location=get_printable_location,
      reds= ['do_void', 'arguments', 'receiver', 'frame'],
@@ -21,37 +22,71 @@ jitdriver = jit.JitDriver(
      # the next line says that calls involving this jitdriver should always be
      # inlined once (which means that things like Integer>>< will be inlined
      # into a while loop again, when enabling this driver).
-     should_unroll_one_iteration = lambda self: True)
+     should_unroll_one_iteration = lambda self, executing_domain: True)
 
 
 class Invokable(Node):
 
-    _immutable_fields_ = ['_expr_or_sequence?', '_universe', '_number_of_temps']
-    _child_nodes_      = ['_expr_or_sequence']
+    _immutable_fields_ = ['_body_enforced?', '_body_unenforced?',
+                          '_universe', '_number_of_temps']
+    _child_nodes_      = ['_body_enforced', '_body_unenforced']
 
-    def __init__(self, source_section, expr_or_sequence, number_of_temps,
-                 universe):
+    def __init__(self, source_section, body_enforced, body_unenforced,
+                 number_of_temps, universe):
         Node.__init__(self, source_section)
-        self._expr_or_sequence = self.adopt_child(expr_or_sequence)
+        self._body_enforced    = self.adopt_child(body_enforced)
+        self._body_unenforced  = self.adopt_child(body_unenforced)
         self._universe         = universe
         self._number_of_temps  = number_of_temps
 
-    def invoke(self, receiver, arguments):
-        return self._do_invoke(receiver, arguments, False)
+    def invoke_enforced(self, receiver, arguments, executing_domain):
+        return self._do_invoke(receiver, arguments, executing_domain,
+                               False, True)
 
-    def invoke_void(self, receiver, arguments):
-        self._do_invoke(receiver, arguments, True)
+    def invoke_enforced_void(self, receiver, arguments, executing_domain):
+        self._do_invoke(receiver, arguments, executing_domain, True, True)
 
-    def _do_invoke(self, receiver, arguments, do_void):
+    def invoke_unenforced(self, receiver, arguments, executing_domain):
+        return self._do_invoke(receiver, arguments, executing_domain,
+                               False, False)
+
+    def invoke_unenforced_void(self, receiver, arguments, executing_domain):
+        self._do_invoke(receiver, arguments, executing_domain, True, False)
+
+    def _do_invoke(self, receiver, arguments, executing_domain,
+                   do_void, enforced):
         frame = Frame(receiver, arguments, self._number_of_temps,
-                      self._universe.nilObject)
+                      self._universe.nilObject, executing_domain)
         jitdriver.jit_merge_point(self      = self,
                                   receiver  = receiver,
                                   arguments = arguments,
                                   frame     = frame,
+                                  executing_domain = executing_domain,
                                   do_void = do_void)
         
-        if do_void:
-            self._expr_or_sequence.execute_void(frame)
+        if enforced:
+            if do_void:
+                self._body_enforced.execute_void(frame)
+                return
+            else:
+                return self._body_enforced.execute(frame)
         else:
-            return self._expr_or_sequence.execute(frame)
+            if do_void:
+                self._body_unenforced.execute_void(frame)
+                return
+            else:
+                return self._body_unenforced.execute(frame)
+
+
+class InvokableUnenforced(Invokable):
+
+    def __init__(self, source_section, body_unenforced,
+                 number_of_temps, universe):
+        Invokable.__init__(self, source_section, body_unenforced,
+                           body_unenforced, number_of_temps, universe)
+
+    def invoke_enforced(self, receiver, arguments):
+        return self._do_invoke(receiver, arguments, False, False)
+
+    def invoke_enforced_void(self, receiver, arguments):
+        self._do_invoke(receiver, arguments, True, False)

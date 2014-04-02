@@ -19,8 +19,8 @@ class AbstractMessageNode(ExpressionNode):
     _child_nodes_      = ['_rcvr_expr',  '_arg_exprs[*]']
 
     def __init__(self, selector, universe, rcvr_expr, arg_exprs,
-                 source_section = None):
-        ExpressionNode.__init__(self, source_section)
+                 executes_enforced, source_section = None):
+        ExpressionNode.__init__(self, executes_enforced, source_section)
         self._selector = selector
         self._universe = universe
         self._rcvr_expr = self.adopt_child(rcvr_expr)
@@ -29,6 +29,7 @@ class AbstractMessageNode(ExpressionNode):
     @unroll_safe
     def _evaluate_rcvr_and_args(self, frame):
         rcvr = self._rcvr_expr.execute(frame)
+        assert rcvr is not None
         if self._arg_exprs:
             args = [arg_exp.execute(frame) for arg_exp in self._arg_exprs]
         else:
@@ -36,88 +37,68 @@ class AbstractMessageNode(ExpressionNode):
         return rcvr, args
 
 
-class UninitializedMessageNode(AbstractMessageNode):
+class AbstractUninitializedMessageNode(AbstractMessageNode):
 
     def execute(self, frame):
         rcvr, args = self._evaluate_rcvr_and_args(frame)
-        return self._specialize(frame, rcvr, args).\
-            execute_evaluated(frame, rcvr, args)
+        return self._specialize(rcvr, args).execute_evaluated(frame, rcvr, args)
 
     def execute_void(self, frame):
         rcvr, args = self._evaluate_rcvr_and_args(frame)
-        self._specialize(frame, rcvr, args).\
-            execute_evaluated_void(frame, rcvr, args)
+        self._specialize(rcvr, args).execute_evaluated_void(frame, rcvr, args)
 
-    def _specialize(self, frame, rcvr, args):
+
+class UninitializedMessageNodeEnforced(AbstractUninitializedMessageNode):
+
+    def __init__(self, selector, universe, rcvr_expr, arg_exprs,
+                 source_section = None):
+        AbstractUninitializedMessageNode.__init__(self, selector, universe,
+                                                  rcvr_expr, arg_exprs,
+                                                  True, source_section)
+
+    def _specialize(self, rcvr, args):
         if args:
-            if isinstance(args[0], Block):
-                if   self._selector.get_string() == "whileTrue:":
-                    return self.replace(
-                        WhileMessageNode(self._rcvr_expr, self._arg_exprs[0],
-                                         self._universe.trueObject,
-                                         self._universe, self._source_section))
-                elif self._selector.get_string() == "whileFalse:":
-                    return self.replace(
-                        WhileMessageNode(self._rcvr_expr, self._arg_exprs[0],
-                                         self._universe.falseObject,
-                                         self._universe, self._source_section))
-            if (isinstance(args[0], Integer) and isinstance(rcvr, Integer) and
-                len(args) > 1 and isinstance(args[1], Block) and
-                self._selector.get_string() == "to:do:"):
-                return self.replace(
-                    IntToIntDoNode(self._rcvr_expr, self._arg_exprs[0],
-                                   self._arg_exprs[1], self._universe,
-                                   self._source_section))
-            if (isinstance(args[0], Double) and isinstance(rcvr, Integer) and
-                len(args) > 1 and isinstance(args[1], Block) and
-                self._selector.get_string() == "to:do:"):
-                return self.replace(
-                    IntToDoubleDoNode(self._rcvr_expr, self._arg_exprs[0],
-                                      self._arg_exprs[1], self._universe,
-                                      self._source_section))
-            if (isinstance(args[0], Integer) and isinstance(rcvr, Integer) and
-                len(args) == 3 and
-                    isinstance(args[1], Integer) and
-                    isinstance(args[2], Block) and
-                self._selector.get_string() == "to:by:do:"):
-                return self.replace(
-                    IntToIntByDoNode(self._rcvr_expr, self._arg_exprs[0],
-                                   self._arg_exprs[1], self._arg_exprs[2],
-                                   self._universe, self._source_section))
-            if (isinstance(args[0], Double) and isinstance(rcvr, Integer) and
-                len(args) == 3 and
-                    isinstance(args[1], Integer) and
-                    isinstance(args[2], Block) and
-                self._selector.get_string() == "to:by:do:"):
-                return self.replace(
-                    IntToDoubleByDoNode(self._rcvr_expr, self._arg_exprs[0],
-                                      self._arg_exprs[1], self._arg_exprs[2],
-                                      self._universe, self._source_section))
-            if (len(args) == 2 and (rcvr is self._universe.trueObject or
-                                    rcvr is self._universe.falseObject) and
-                self._selector.get_string() == "ifTrue:ifFalse:"):
-                return self.replace(
-                    IfTrueIfFalseNode(self._rcvr_expr, self._arg_exprs[0],
-                                      self._arg_exprs[1], self._universe,
-                                      self._source_section))
-            if (len(args) == 1 and (rcvr is self._universe.trueObject or
-                                    rcvr is self._universe.falseObject)):
-                if self._selector.get_string() == "ifTrue:":
-                    return self.replace(
-                        IfNode(self._rcvr_expr, self._arg_exprs[0],
-                               self._universe.trueObject, self._universe,
-                               self._source_section))
-                if self._selector.get_string() == "ifFalse:":
-                    return self.replace(
-                        IfNode(self._rcvr_expr, self._arg_exprs[0],
-                               self._universe.falseObject, self._universe,
-                               self._source_section))
+            for specialization in [WhileMessageNode,
+                                   IntToIntDoNode,   IntToDoubleDoNode,
+                                   IntToIntByDoNode, IntToDoubleByDoNode,
+                                   IfTrueIfFalseNode,
+                                   IfNode]:
+                if specialization.can_specialize(self._selector, rcvr, args,
+                                                 self):
+                    return specialization.specialize_node(self._selector, rcvr,
+                                                          args, self)
         return self.replace(
-            GenericMessageNode(self._selector, self._universe, self._rcvr_expr,
-                               self._arg_exprs, self._source_section))
+            GenericMessageNodeEnforced(self._selector, self._universe,
+                                       self._rcvr_expr, self._arg_exprs,
+                                       self._source_section))
 
 
-class GenericMessageNode(AbstractMessageNode):
+class UninitializedMessageNodeUnenforced(AbstractUninitializedMessageNode):
+
+    def __init__(self, selector, universe, rcvr_expr, arg_exprs,
+                 source_section = None):
+        AbstractUninitializedMessageNode.__init__(self, selector, universe,
+                                                  rcvr_expr, arg_exprs,
+                                                  False, source_section)
+
+    def _specialize(self, rcvr, args):
+        if args:
+            for specialization in [WhileMessageNode,
+                                   IntToIntDoNode,   IntToDoubleDoNode,
+                                   IntToIntByDoNode, IntToDoubleByDoNode,
+                                   IfTrueIfFalseNode,
+                                   IfNode]:
+                if specialization.can_specialize(self._selector, rcvr, args,
+                                                 self):
+                    return specialization.specialize_node(self._selector, rcvr,
+                                                          args, self)
+        return self.replace(
+            GenericMessageNodeUnenforced(self._selector, self._universe,
+                                         self._rcvr_expr, self._arg_exprs,
+                                         self._source_section))
+
+
+class AbstractGenericMessageNode(AbstractMessageNode):
 
     def execute(self, frame):
         rcvr, args = self._evaluate_rcvr_and_args(frame)
@@ -126,22 +107,6 @@ class GenericMessageNode(AbstractMessageNode):
     def execute_void(self, frame):
         rcvr, args = self._evaluate_rcvr_and_args(frame)
         self.execute_evaluated_void(frame, rcvr, args)
-
-    def execute_evaluated_void(self, frame, rcvr, args):
-        method = self._lookup_method(rcvr)
-        if method:
-            method.invoke_void(rcvr, args)
-        else:
-            rcvr.send_does_not_understand_void(self._selector, args,
-                                               self._universe)
-
-    def execute_evaluated(self, frame, rcvr, args):
-        method = self._lookup_method(rcvr)
-        if method:
-            return method.invoke(rcvr, args)
-        else:
-            return rcvr.send_does_not_understand(self._selector, args,
-                                                 self._universe)
 
     def _lookup_method(self, rcvr):
         rcvr_class = self._class_of_receiver(rcvr)
@@ -156,3 +121,56 @@ class GenericMessageNode(AbstractMessageNode):
         return "%s(%s, %s)" % (self.__class__.__name__,
                                self._selector,
                                self._source_section)
+
+
+class GenericMessageNodeEnforced(AbstractGenericMessageNode):
+
+    def __init__(self, selector, universe, rcvr_expr, arg_exprs,
+                 source_section = None):
+        AbstractGenericMessageNode.__init__(self, selector, universe, rcvr_expr,
+                                            arg_exprs, True, source_section)
+
+    def execute_evaluated_void(self, frame, rcvr, args):
+        method = self._lookup_method(rcvr)
+        if method:
+            method.invoke_enforced_void(rcvr, args,
+                                        frame.get_executing_domain())
+        else:
+            rcvr.send_does_not_understand_enforced_void(self._selector, args,
+                                                        self._universe)
+
+    def execute_evaluated(self, frame, rcvr, args):
+        method = self._lookup_method(rcvr)
+        if method:
+            return method.invoke_enforced(rcvr, args,
+                                          frame.get_executing_domain())
+        else:
+            return rcvr.send_does_not_understand_enforced(self._selector, args,
+                                                          self._universe)
+
+
+class GenericMessageNodeUnenforced(AbstractGenericMessageNode):
+
+    def __init__(self, selector, universe, rcvr_expr, arg_exprs,
+                 source_section = None):
+        AbstractGenericMessageNode.__init__(self, selector, universe, rcvr_expr,
+                                            arg_exprs, False, source_section)
+
+    def execute_evaluated_void(self, frame, rcvr, args):
+        method = self._lookup_method(rcvr)
+        if method:
+            method.invoke_unenforced_void(rcvr, args,
+                                          frame.get_executing_domain())
+        else:
+            rcvr.send_does_not_understand_unenforced_void(self._selector, args,
+                                                          self._universe)
+
+    def execute_evaluated(self, frame, rcvr, args):
+        method = self._lookup_method(rcvr)
+        if method:
+            return method.invoke_unenforced(rcvr, args,
+                                            frame.get_executing_domain())
+        else:
+            return rcvr.send_does_not_understand_unenforced(self._selector,
+                                                            args,
+                                                            self._universe)

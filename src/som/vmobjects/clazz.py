@@ -1,6 +1,7 @@
 from rpython.rlib import jit
 from som.vmobjects.object      import Object
 
+
 class Class(Object):
     
     _immutable_fields_ = ["_super_class"
@@ -8,8 +9,10 @@ class Class(Object):
                           "_instance_fields"
                           "_instance_invokables"]
     
-    def __init__(self, universe, number_of_fields=-1):
-        Object.__init__(self, universe.nilObject, number_of_fields)
+    def __init__(self, universe, number_of_fields = -1, obj_class = None,
+                 domain = None):
+        Object.__init__(self, universe.nilObject, number_of_fields, obj_class,
+                        domain)
         self._super_class = universe.nilObject
         self._name        = None
         self._instance_fields = None
@@ -149,3 +152,13 @@ class Class(Object):
 
     def __str__(self):
         return "Class(" + self.get_name().get_string() + ")"
+
+    def set_domain(self, domain):
+        ## TODO: for the classes of immutable and built-in objects, we might need
+        ##       to do something special. Not yet sure what, but I think, I
+        ##       want them always belong to the universe.standardDomain.
+        self._domain = domain
+
+    def has_domain(self):
+        ## TODO: for immutable built-in classes, this might return False
+        return True

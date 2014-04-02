@@ -1,10 +1,9 @@
 from rpython.rlib.rrandom import Random
 from rpython.rlib import jit
 
-from som.interpreter.frame       import Frame
- 
 from som.vm.symbol_table         import SymbolTable
 from som.vmobjects.object        import Object
+from som.vmobjects.domain        import Domain
 from som.vmobjects.clazz         import Class
 from som.vmobjects.array         import Array
 from som.vmobjects.symbol        import Symbol
@@ -125,12 +124,15 @@ class Universe(object):
             return shell.start()
         else:
             # Convert the arguments into an array
-            arguments_array = self.new_array_with_strings(arguments)
+            arguments_array = self.new_array_with_strings(arguments,
+                                                          self.standardDomain)
 
             # Lookup the initialize invokable on the system class
             initialize = self.systemClass.lookup_invokable(
                 self.symbol_for("initialize:"))
-            return initialize.invoke(system_object, [arguments_array])
+            return initialize.invoke_unenforced(system_object,
+                                                [arguments_array],
+                                                self.standardDomain)
     
     def handle_arguments(self, arguments):
         got_classpath  = False
@@ -196,22 +198,25 @@ class Universe(object):
     def _initialize_object_system(self):
         # Allocate the nil object
         self.nilObject = Object(None)
+        self.standardDomain = Domain(self.nilObject,
+                                     self.nilObject,
+                                     self.nilObject)
 
         # Allocate the Metaclass classes
-        self.metaclassClass = self.new_metaclass_class()
+        self.metaclassClass = self.new_metaclass_class(self.standardDomain)
 
         # Allocate the rest of the system classes
-        self.objectClass     = self.new_system_class()
-        self.nilClass        = self.new_system_class()
-        self.classClass      = self.new_system_class()
-        self.arrayClass      = self.new_system_class()
-        self.symbolClass     = self.new_system_class()
-        self.methodClass     = self.new_system_class()
-        self.integerClass    = self.new_system_class()
-        self.bigintegerClass = self.new_system_class()
-        self.primitiveClass  = self.new_system_class()
-        self.stringClass     = self.new_system_class()
-        self.doubleClass     = self.new_system_class()
+        self.objectClass     = self.new_system_class(self.standardDomain)
+        self.nilClass        = self.new_system_class(self.standardDomain)
+        self.classClass      = self.new_system_class(self.standardDomain)
+        self.arrayClass      = self.new_system_class(self.standardDomain)
+        self.symbolClass     = self.new_system_class(self.standardDomain)
+        self.methodClass     = self.new_system_class(self.standardDomain)
+        self.integerClass    = self.new_system_class(self.standardDomain)
+        self.bigintegerClass = self.new_system_class(self.standardDomain)
+        self.primitiveClass  = self.new_system_class(self.standardDomain)
+        self.stringClass     = self.new_system_class(self.standardDomain)
+        self.doubleClass     = self.new_system_class(self.standardDomain)
 
         # Setup the class reference for the nil object
         self.nilObject.set_class(self.nilClass)
@@ -288,12 +293,12 @@ class Universe(object):
         result = self.new_symbol(string)
         return result
     
-    def new_array_with_length(self, length):
-        return Array(self.nilObject, length)
+    def new_array_with_length(self, length, domain):
+        return Array(self.nilObject, length, domain)
   
-    def new_array_from_list(self, values):
+    def new_array_from_list(self, values, domain):
         # Allocate a new array with the same length as the list
-        result = self.new_array_with_length(len(values))
+        result = self.new_array_with_length(len(values), domain)
 
         # Copy all elements from the list into the array
         for i in range(len(values)):
@@ -301,9 +306,9 @@ class Universe(object):
 
         return result
   
-    def new_array_with_strings(self, strings):
+    def new_array_with_strings(self, strings, domain):
         # Allocate a new array with the same length as the string array
-        result = self.new_array_with_length(len(strings))
+        result = self.new_array_with_length(len(strings), domain)
 
         # Copy all elements from the string array into the array
         for i in range(len(strings)):
@@ -311,14 +316,13 @@ class Universe(object):
     
         return result
     
-    def new_block(self, method, context_frame):
-        return Block(method, context_frame)
+    def new_block(self, method, context_frame, captured_enforced, domain):
+        return Block(method, context_frame, captured_enforced, domain)
 
-    def new_class(self, class_class):
+    def new_class(self, class_class, domain):
         # Allocate a new class and set its class to be the given class class
-        result = Class(self, class_class.get_number_of_instance_fields())
-        result.set_class(class_class)
-        return result
+        return Class(self, class_class.get_number_of_instance_fields(),
+                       class_class, domain)
 
     def new_method(self, signature, invokable, is_primitive,
                    embedded_block_method):
@@ -328,30 +332,31 @@ class Universe(object):
     def new_instance(self, instance_class):
         return Object(self.nilObject, instance_class.get_number_of_instance_fields(), instance_class)
 
-    def new_integer(self, value):
+    @staticmethod
+    def new_integer(value):
         assert isinstance(value, int)
         return Integer(value)
- 
-    def new_biginteger(self, value):
+
+    @staticmethod
+    def new_biginteger(value):
         return BigInteger(value)
- 
-    def new_double(self, value):
+
+    @staticmethod
+    def new_double(value):
         return Double(value)
     
-    def new_metaclass_class(self):
+    def new_metaclass_class(self, domain):
         # Allocate the metaclass classes
-        result = Class(self)
-        result.set_class(Class(self))
+        result = Class(self, -1, Class(self, -1, None, domain), domain)
 
         # Setup the metaclass hierarchy
         result.get_class(self).set_class(result)
-
-        # Return the freshly allocated metaclass class
         return result
 
-    def new_string(self, embedded_string):
+    @staticmethod
+    def new_string(embedded_string):
         return String(embedded_string)
-    
+
     def new_symbol(self, string):
         result = Symbol(string)
 
@@ -359,32 +364,34 @@ class Universe(object):
         self._symbol_table.insert(result)
         return result
       
-    def new_system_class(self):
+    def new_system_class(self, domain):
         # Allocate the new system class
-        system_class = Class(self)
+        system_class = Class(self, -1, Class(self, -1, None, domain), domain)
 
         # Setup the metaclass hierarchy
-        system_class.set_class(Class(self))
         system_class.get_class(self).set_class(self.metaclassClass)
-
-        # Return the freshly allocated system class
         return system_class
     
     def _initialize_system_class(self, system_class, super_class, name):
         # Initialize the superclass hierarchy
         if super_class:
             system_class.set_super_class(super_class)
-            system_class.get_class(self).set_super_class(super_class.get_class(self))
+            system_class.get_class(self).set_super_class(
+                super_class.get_class(self))
         else:
             system_class.get_class(self).set_super_class(self.classClass)
 
         # Initialize the array of instance fields
-        system_class.set_instance_fields(self.new_array_with_length(0))
-        system_class.get_class(self).set_instance_fields(self.new_array_with_length(0))
+        system_class.set_instance_fields(
+            self.new_array_with_length(0, system_class.get_domain(self)))
+        system_class.get_class(self).set_instance_fields(
+            self.new_array_with_length(0, system_class.get_domain(self)))
 
         # Initialize the array of instance invokables
-        system_class.set_instance_invokables(self.new_array_with_length(0))
-        system_class.get_class(self).set_instance_invokables(self.new_array_with_length(0))
+        system_class.set_instance_invokables(
+            self.new_array_with_length(0, system_class.get_domain(self)))
+        system_class.get_class(self).set_instance_invokables(
+            self.new_array_with_length(0, system_class.get_domain(self)))
 
         # Initialize the name of the system class
         system_class.set_name(self.symbol_for(name))
@@ -392,8 +399,7 @@ class Universe(object):
 
         # Insert the system class into the dictionary of globals
         self.set_global(system_class.get_name(), system_class)
-    
-    
+
     def get_global(self, name):
         # Return the global with the given name if it's in the dictionary of globals
         # if not, return None
@@ -499,22 +505,28 @@ class Universe(object):
             dump(result)
         return result
 
+
 def error_print(msg):
     os.write(2, msg or "")
+
 
 def error_println(msg = ""):
     os.write(2, msg + "\n")
 
+
 def std_print(msg):
     os.write(1, msg or "")
 
+
 def std_println(msg = ""):
     os.write(1, msg + "\n")
+
 
 def main(args):
     u = Universe()
     u.interpret(args[1:])
     u.exit(0)
+
 
 def get_current():
     return Universe.CURRENT

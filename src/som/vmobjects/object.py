@@ -3,16 +3,21 @@ from som.vmobjects.abstract_object import AbstractObject
 
 class Object(AbstractObject):
 
-    _immutable_fields_ = ["_class", "_fields"]
+    ## TODO: see whether it is a really good idea to make _domain quasi immutable
+    ##       in situations with actors, for instance, were we change the owner
+    ##       domain of an object frequently, that might not have the desired
+    ##       effect
+    _immutable_fields_ = ["_class", "_fields", "_domain?"]
     
     # Static field indices and number of object fields
     NUMBER_OF_OBJECT_FIELDS = 0
-    
+
     NUMBER_OF_DIRECT_FIELDS = 5
 
-    def __init__(self, nilObject, number_of_fields = -1, obj_class = None):
+    def __init__(self, nilObject, number_of_fields = -1, obj_class = None,
+                 domain = None):
         num_fields = (number_of_fields if number_of_fields != -1
-                      else self._get_default_number_of_fields())
+                      else self.NUMBER_OF_OBJECT_FIELDS)
         
         self._field1 = nilObject
         self._field2 = nilObject
@@ -26,6 +31,8 @@ class Object(AbstractObject):
             self._fields = []
              
         self._class = obj_class or nilObject
+
+        self._domain = domain  ## TODO: should we make sure this is never None???
 
     def get_class(self, universe):
         return self._class
@@ -45,10 +52,6 @@ class Object(AbstractObject):
         # Get the number of fields in this object
         return len(self._fields)
 
-    def _get_default_number_of_fields(self):
-        # Return the default number of fields in an object
-        return self.NUMBER_OF_OBJECT_FIELDS
-    
     def get_field(self, index):
         # Get the field with the given index
         assert isinstance(index, int)
@@ -71,3 +74,12 @@ class Object(AbstractObject):
         if index == 3: self._field4 = value; return
         if index == 4: self._field5 = value; return
         self._fields[index - self.NUMBER_OF_DIRECT_FIELDS] = value
+
+    def get_domain(self, universe):
+        return self._domain
+
+    def set_domain(self, domain):
+        self._domain = domain
+
+    def has_domain(self):
+        return True

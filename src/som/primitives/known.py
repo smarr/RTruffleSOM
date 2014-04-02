@@ -5,7 +5,9 @@ from rpython.rlib.unroll import unrolling_iterable
 
 EXPECTED_NUMBER_OF_PRIMITIVE_FILES = 12
 
+
 class PrimitivesNotFound(Exception): pass
+
 
 def _is_primitives_class(e):
     "NOT_RPYTHON"
@@ -15,6 +17,7 @@ def _is_primitives_class(e):
     return (inspect.isclass(entry) and
             issubclass(entry, Primitives)
             and entry is not Primitives)
+
 
 def _setup_primitives():
     "NOT_RPYTHON"

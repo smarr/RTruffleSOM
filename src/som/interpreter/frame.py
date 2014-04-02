@@ -3,14 +3,16 @@ from rpython.rlib import jit
 
 class Frame(object):
         
-    _immutable_fields_ = ["_receiver", "_arguments[*]", "_temps"]
+    _immutable_fields_ = ["_receiver", "_arguments[*]", "_temps",
+                          "_executing_domain"]
 
     def __init__(self, receiver, arguments, number_of_temps,
-                 nilObject):
+                 nilObject, executing_domain):
         self._receiver       = receiver
         self._arguments      = arguments
         self._on_stack       = True
         self._temps          = [nilObject] * number_of_temps
+        self._executing_domain = executing_domain
 
     def get_argument(self, index):
         jit.promote(index)
@@ -35,6 +37,9 @@ class Frame(object):
 
     def mark_as_no_longer_on_stack(self):
         self._on_stack = False
+
+    def get_executing_domain(self):
+        return self._executing_domain
 
     def __str__(self):
         return "Frame(%s, %s, %s)" % (self._receiver, self._arguments,

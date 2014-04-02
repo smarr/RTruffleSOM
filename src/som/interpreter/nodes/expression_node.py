@@ -1,10 +1,10 @@
-from rtruffle.node import Node
+from som.interpreter.nodes.som_node import SOMNode
 
 
-class ExpressionNode(Node):
+class ExpressionNode(SOMNode):
 
-    def __init__(self, source_section = None):
-        Node.__init__(self, source_section)
+    def __init__(self, executes_enforced, source_section = None):
+        SOMNode.__init__(self, executes_enforced, source_section)
 
     def is_super_node(self):
         return False

@@ -2,7 +2,7 @@ from som.primitives.primitives import Primitives
 from som.vmobjects.primitive   import Primitive
 
 
-def _restart(ivkbl, rcvr, args):
+def _restart(ivkbl, rcvr, args, domain):
     raise RuntimeError("Restart primitive is not supported, #whileTrue: "
                        "and #whileTrue: are intrisified so that #restart "
                        "is not needed.")

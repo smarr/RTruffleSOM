@@ -1,9 +1,11 @@
 from rtruffle.source_section import SourceSection
 
 from ..interpreter.nodes.block_node       import BlockNode, BlockNodeWithContext
-from ..interpreter.nodes.global_read_node import UninitializedGlobalReadNode
+from ..interpreter.nodes.global_read_node import \
+    UninitializedGlobalReadNodeEnforced, UninitializedGlobalReadNodeUnenforced
 from ..interpreter.nodes.literal_node     import LiteralNode
-from ..interpreter.nodes.message_node     import UninitializedMessageNode
+from ..interpreter.nodes.message_node     import \
+    UninitializedMessageNodeEnforced, UninitializedMessageNodeUnenforced
 from ..interpreter.nodes.return_non_local_node import ReturnNonLocalNode
 from ..interpreter.nodes.sequence_node    import SequenceNode
 
@@ -101,14 +103,15 @@ class Parser(object):
             mgenc.set_holder(cgenc)
             mgenc.add_argument("self")
          
-            method_body = self._method(mgenc)
+            method_body_en, method_body_un = self._method(mgenc)
          
             if mgenc.is_primitive():
                 cgenc.add_instance_method(
                     mgenc.assemble_primitive(self._universe))
             else:
                 cgenc.add_instance_method(
-                    mgenc.assemble(self._universe, method_body))
+                    mgenc.assemble(self._universe, method_body_en,
+                                   method_body_un))
 
         if self._accept(Symbol.Separator):
             cgenc.set_class_side(True)
@@ -122,14 +125,15 @@ class Parser(object):
                 mgenc.set_holder(cgenc)
                 mgenc.add_argument("self")
          
-                method_body = self._method(mgenc)
+                method_body_en, method_body_un = self._method(mgenc)
          
                 if mgenc.is_primitive():
                     cgenc.add_class_method(
                         mgenc.assemble_primitive(self._universe))
                 else:
                     cgenc.add_class_method(
-                        mgenc.assemble(self._universe, method_body))
+                        mgenc.assemble(self._universe, method_body_en,
+                                       method_body_un))
         
         self._expect(Symbol.EndTerm)
 
@@ -160,7 +164,8 @@ class Parser(object):
             #  harder to change the definition of Class and Object
             field_names_of_class = ["class", "superClass", "name",
                                     "instanceFields", "instanceInvokables"]
-            field_names = self._universe.new_array_with_strings(field_names_of_class)
+            field_names = self._universe.new_array_with_strings(
+                field_names_of_class, self._universe.standardDomain)
             cgenc.set_class_fields_of_super(field_names)
 
     def _sym_in(self, symbol_list):
@@ -209,21 +214,33 @@ class Parser(object):
         node.assign_source_section(SourceSection(
             self._source_reader, "method", coord,
             self._lexer.get_number_of_characters_read(),
-            self._file_name))
+                self._file_name))
         return node
 
     def _method(self, mgenc):
         self._pattern(mgenc)
         self._expect(Symbol.Equal)
+
+        self._unenforced_annotation(mgenc)
+
         if self._sym == Symbol.Primitive:
-            mgenc.set_primitive(True)
+            mgenc.set_primitive()
             return self._primitive_block()
         else:
             return self._method_block(mgenc)
 
+    def _unenforced_annotation(self, mgenc):
+        if self._sym == Symbol.Identifier:
+            if self._text == "unenforced":
+                self._accept(Symbol.Identifier)
+                mgenc.set_unenforced()
+            else:
+                raise ParseError("Unexpected identifier: %s" % self._text,
+                                 Symbol.Identifier, self)
+
     def _primitive_block(self):
-        self._expect(Symbol.Primitive)
-        return None
+        self._accept(Symbol.Primitive)
+        return None, None
 
     def _pattern(self, mgenc):
         if self._sym == Symbol.Identifier:
@@ -297,53 +314,79 @@ class Parser(object):
     def _locals(self, mgenc):
         while self._sym == Symbol.Identifier:
             mgenc.add_local_if_absent(self._variable())
- 
+
+    def _self_read(self, mgenc):
+        self_coord = self._lexer.get_source_coordinate()
+        self_enforced, self_unenforced = self._variable_read(mgenc, "self")
+
+        self._assign_source(self_enforced,   self_coord)
+        self._assign_source(self_unenforced, self_coord)
+        return self_enforced, self_unenforced
+
     def _block_body(self, mgenc):
         coordinate = self._lexer.get_source_coordinate()
-        expressions = []
+        expressions_enforced   = []
+        expressions_unenforced = []
 
         while True:
             if self._accept(Symbol.Exit):
-                expressions.append(self._result(mgenc))
-                return self._create_sequence_node(coordinate, expressions)
+                enforced, unenforced = self._result(mgenc)
+                expressions_enforced.append(enforced)
+                expressions_unenforced.append(unenforced)
+                return self._create_sequence_node(coordinate,
+                                                  expressions_enforced,
+                                                  expressions_unenforced)
             elif self._sym == Symbol.EndBlock:
-                return self._create_sequence_node(coordinate, expressions)
+                return self._create_sequence_node(coordinate,
+                                                  expressions_enforced,
+                                                  expressions_unenforced)
             elif self._sym == Symbol.EndTerm:
                 # the end of the method has been found (EndTerm) - make it
                 # implicitly return "self"
-                self_exp = self._variable_read(mgenc, "self")
-                self_coord = self._lexer.get_source_coordinate()
-                self._assign_source(self_exp, self_coord)
-                expressions.append(self_exp)
-                return self._create_sequence_node(coordinate, expressions)
+                enforced, unenforced = self._self_read(mgenc)
+                expressions_enforced.append(enforced)
+                expressions_unenforced.append(unenforced)
+                return self._create_sequence_node(coordinate,
+                                                  expressions_enforced,
+                                                  expressions_unenforced)
 
-            expressions.append(self._expression(mgenc))
+            enforced, unenforced = self._expression(mgenc)
+            expressions_enforced.append(enforced)
+            expressions_unenforced.append(unenforced)
             self._accept(Symbol.Period)
 
-    def _create_sequence_node(self, coordinate, expressions):
-        if not expressions:
-            nil_exp = UninitializedGlobalReadNode(
+    def _create_sequence_node(self, coordinate, exprs_enforced, exprs_unenforced):
+        if not exprs_unenforced:
+            nil_enforced   = UninitializedGlobalReadNodeEnforced(
                 self._universe.symbol_for("nil"), self._universe)
-            return self._assign_source(nil_exp, coordinate)
-        if len(expressions) == 1:
-            return expressions[0]
+            nil_unenforced = UninitializedGlobalReadNodeUnenforced(
+                self._universe.symbol_for("nil"), self._universe)
+            return self._assign_source(nil_enforced, coordinate),\
+                   self._assign_source(nil_unenforced, coordinate)
+        if len(exprs_unenforced) == 1:
+            return exprs_enforced[0], exprs_unenforced[0]
 
-        seq_node = SequenceNode(expressions[:])
-        return self._assign_source(seq_node, coordinate)
+        seq_enforced   = SequenceNode(exprs_enforced[:])
+        seq_unenforced = SequenceNode(exprs_unenforced[:])
+        return self._assign_source(seq_enforced,   coordinate),\
+               self._assign_source(seq_unenforced, coordinate)
 
     def _result(self, mgenc):
-        exp   = self._expression(mgenc)
+        enforced, unenforced = self._expression(mgenc)
         coord = self._lexer.get_source_coordinate()
  
         self._accept(Symbol.Period)
 
         if mgenc.is_block_method():
-            node = ReturnNonLocalNode(mgenc.get_outer_self_context_level(),
-                                      exp, self._universe)
+            enforced_return   = ReturnNonLocalNode(mgenc.get_outer_self_context_level(),
+                                                   enforced, self._universe)
+            unenforced_return = ReturnNonLocalNode(mgenc.get_outer_self_context_level(),
+                                                   unenforced, self._universe)
             mgenc.make_catch_non_local_return()
-            return self._assign_source(node, coord)
+            return self._assign_source(enforced_return,   coord), \
+                   self._assign_source(unenforced_return, coord)
         else:
-            return exp
+            return enforced, unenforced
 
     def _expression(self, mgenc):
         self._peek_for_next_symbol_from_lexer()
@@ -364,38 +407,40 @@ class Parser(object):
                              " fields, but found instead a %(found)s",
                              Symbol.Identifier, self)
 
-        variable = self._assignment()
+        variable_name = self._assignment()
         self._peek_for_next_symbol_from_lexer()
 
         if self._next_sym == Symbol.Assign:
-            value = self._assignments(mgenc)
+            value_en, value_un = self._assignments(mgenc)
         else:
-            value = self._evaluation(mgenc)
+            value_en, value_un = self._evaluation(mgenc)
 
-        exp = self._variable_write(mgenc, variable, value)
-        return self._assign_source(exp, coord)
+        write_en, write_un = self._variable_write(mgenc, variable_name, value_en, value_un)
+        return self._assign_source(write_en, coord),\
+               self._assign_source(write_un, coord)
  
     def _assignment(self):
-        v = self._variable()
+        var_name = self._variable()
         self._expect(Symbol.Assign)
-        return v
+        return var_name
  
     def _evaluation(self, mgenc):
-        exp = self._primary(mgenc)
+        enforced, unenforced = self._primary(mgenc)
  
         if (self._sym == Symbol.Identifier       or
             self._sym == Symbol.Keyword          or 
             self._sym == Symbol.OperatorSequence or
             self._sym_in(self._binary_op_syms)):
-            exp = self._messages(mgenc, exp)
-        return exp
+            enforced, unenforced = self._messages(mgenc, enforced, unenforced)
+        return enforced, unenforced
  
     def _primary(self, mgenc):
         if self._sym == Symbol.Identifier:
             coordinate = self._lexer.get_source_coordinate()
-            v = self._variable()
-            var_read = self._variable_read(mgenc, v)
-            return self._assign_source(var_read, coordinate)
+            var_name = self._variable()
+            read_en, read_un = self._variable_read(mgenc, var_name)
+            return self._assign_source(read_en, coordinate), \
+                   self._assign_source(read_un, coordinate)
 
         if self._sym == Symbol.NewTerm:
             return self._nested_term(mgenc)
@@ -407,85 +452,107 @@ class Parser(object):
             bgenc.set_holder(mgenc.get_holder())
             bgenc.set_outer(mgenc)
  
-            block_body   = self._nested_block(bgenc)
-            block_method = bgenc.assemble(self._universe, block_body)
+            block_body_en, block_body_un = self._nested_block(bgenc)
+            block_method = bgenc.assemble(self._universe, block_body_en,
+                                          block_body_un)
             mgenc.add_embedded_block_method(block_method)
 
             if bgenc.requires_context():
-                result = BlockNodeWithContext(block_method, self._universe)
+                block_en = BlockNodeWithContext(block_method,
+                                                self._universe, True)
+                block_un = BlockNodeWithContext(block_method,
+                                                self._universe, False)
             else:
-                result = BlockNode(block_method, self._universe)
-            return self._assign_source(result, coordinate)
+                block_en = BlockNode(block_method, self._universe,  True)
+                block_un = BlockNode(block_method, self._universe, False)
+            return self._assign_source(block_en, coordinate), \
+                   self._assign_source(block_un, coordinate)
 
         return self._literal()
  
     def _variable(self):
         return self._identifier()
  
-    def _messages(self, mgenc, receiver):
-        msg = receiver
+    def _messages(self, mgenc, receiver_en, receiver_un):
+        msg_en = receiver_en
+        msg_un = receiver_un
 
         while self._sym == Symbol.Identifier:
-            msg = self._unary_message(msg)
+            msg_en, msg_un = self._unary_message(msg_en, msg_un)
 
         while (self._sym == Symbol.OperatorSequence or
                self._sym_in(self._binary_op_syms)):
-            msg = self._binary_message(mgenc, msg)
+            msg_en, msg_un = self._binary_message(mgenc, msg_en, msg_un)
     
         if self._sym == Symbol.Keyword:
-            msg = self._keyword_message(mgenc, msg)
+            msg_en, msg_un = self._keyword_message(mgenc, msg_en, msg_un)
         
-        return msg
+        return msg_en, msg_un
 
-    def _unary_message(self, receiver):
+    def _unary_message(self, receiver_en, receiver_un):
         coord = self._lexer.get_source_coordinate()
         selector = self._unary_selector()
-        msg = UninitializedMessageNode(selector, self._universe, receiver, None)
-        return self._assign_source(msg, coord)
+        msg_en = UninitializedMessageNodeEnforced(selector,   self._universe,
+                                                  receiver_en, None)
+        msg_un = UninitializedMessageNodeUnenforced(selector, self._universe,
+                                                    receiver_un, None)
+        return self._assign_source(msg_en, coord), \
+               self._assign_source(msg_un, coord)
 
-    def _binary_message(self, mgenc, receiver):
+    def _binary_message(self, mgenc, receiver_en, receiver_un):
         coord    = self._lexer.get_source_coordinate()
         selector = self._binary_selector()
-        operand  = self._binary_operand(mgenc)
+        operand_en, operand_un = self._binary_operand(mgenc)
 
-        msg = UninitializedMessageNode(selector, self._universe, receiver,
-                                       [operand])
-        return self._assign_source(msg, coord)
+        msg_en = UninitializedMessageNodeEnforced(selector, self._universe,
+                                                  receiver_en, [operand_en])
+        msg_un = UninitializedMessageNodeUnenforced(selector, self._universe,
+                                                    receiver_un, [operand_un])
+        return self._assign_source(msg_en, coord), \
+               self._assign_source(msg_un, coord)
 
     def _binary_operand(self, mgenc):
-        operand = self._primary(mgenc)
+        operand_en, operand_un = self._primary(mgenc)
  
         while self._sym == Symbol.Identifier:
-            operand = self._unary_message(operand)
-        return operand
+            operand_en, operand_un = self._unary_message(operand_en, operand_un)
+        return operand_en, operand_un
 
-    def _keyword_message(self, mgenc, receiver):
+    def _keyword_message(self, mgenc, receiver_en, receiver_un):
         coord = self._lexer.get_source_coordinate()
-        arguments = []
-        keyword   = []
+        arguments_en = []
+        arguments_un = []
+        keyword      = []
 
         while self._sym == Symbol.Keyword:
             keyword.append(self._keyword())
-            arguments.append(self._formula(mgenc))
+            arg_en, arg_un = self._formula(mgenc)
+            arguments_en.append(arg_en)
+            arguments_un.append(arg_un)
 
         selector = self._universe.symbol_for("".join(keyword))
-        msg = UninitializedMessageNode(selector, self._universe, receiver,
-                                       arguments[:])
-        return self._assign_source(msg, coord)
+        msg_en = UninitializedMessageNodeEnforced(selector, self._universe,
+                                                  receiver_en, arguments_en[:])
+        msg_un = UninitializedMessageNodeUnenforced(selector, self._universe,
+                                                    receiver_un,
+                                                    arguments_un[:])
+        return self._assign_source(msg_en, coord), \
+               self._assign_source(msg_un, coord)
 
     def _formula(self, mgenc):
-        operand = self._binary_operand(mgenc)
+        operand_en, operand_un = self._binary_operand(mgenc)
 
         while (self._sym == Symbol.OperatorSequence or
                self._sym_in(self._binary_op_syms)):
-            operand = self._binary_message(mgenc, operand)
-        return operand
+            operand_en, operand_un = self._binary_message(mgenc, operand_en,
+                                                          operand_un)
+        return operand_en, operand_un
 
     def _nested_term(self, mgenc):
         self._expect(Symbol.NewTerm)
-        exp = self._expression(mgenc)
+        exp_en, exp_un = self._expression(mgenc)
         self._expect(Symbol.EndTerm)
-        return exp
+        return exp_en, exp_un
 
     def _literal(self):
         if self._sym == Symbol.Pound:
@@ -503,11 +570,16 @@ class Parser(object):
             val = self._literal_decimal()
 
         if integer_value_fits(val):
-            lit = LiteralNode(self._universe.new_integer(val))
+            integer = self._universe.new_integer(val)
+            lit_en = LiteralNode(integer, True)
+            lit_un = LiteralNode(integer, False)
         else:
-            lit = LiteralNode(self._universe.new_biginteger(val))
+            biginteger = self._universe.new_biginteger(val)
+            lit_en = LiteralNode(biginteger, True)
+            lit_un = LiteralNode(biginteger, False)
 
-        return self._assign_source(lit, coord)
+        return self._assign_source(lit_en, coord), \
+               self._assign_source(lit_un, coord)
   
     def _literal_decimal(self):
         return self._literal_integer()
@@ -531,16 +603,20 @@ class Parser(object):
         else:
             symb = self._selector()
       
-        lit = LiteralNode(symb)
-        return self._assign_source(lit, coord)
+        lit_en = LiteralNode(symb, True)
+        lit_un = LiteralNode(symb, False)
+        return self._assign_source(lit_en, coord), \
+               self._assign_source(lit_un, coord)
 
     def _literal_string(self):
         coord = self._lexer.get_source_coordinate()
         s = self._string()
      
         string = self._universe.new_string(s)
-        lit = LiteralNode(string)
-        return self._assign_source(lit, coord)
+        lit_en = LiteralNode(string, True)
+        lit_un = LiteralNode(string, False)
+        return self._assign_source(lit_en, coord), \
+               self._assign_source(lit_un, coord)
      
     def _selector(self):
         if (self._sym == Symbol.OperatorSequence or
@@ -577,9 +653,9 @@ class Parser(object):
  
         mgenc.set_signature(self._universe.symbol_for(block_sig))
  
-        expressions = self._block_contents(mgenc)
+        expr_en, expr_un = self._block_contents(mgenc)
         self._expect(Symbol.EndBlock)
-        return expressions
+        return expr_en, expr_un
  
     def _block_pattern(self, mgenc):
         self._block_arguments(mgenc)
@@ -611,24 +687,24 @@ class Parser(object):
 
         # otherwise, it might be an object field
         var_symbol = self._universe.symbol_for(variable_name)
-        field_read = mgenc.get_object_field_read(var_symbol)
-        if field_read:
-            return field_read
+        field_read_en, field_read_un = mgenc.get_object_field_read(var_symbol)
+        if field_read_en:
+            return field_read_en, field_read_un
 
         # nope, so, it is a global?
         return mgenc.get_global_read(var_symbol, self._universe)
 
-    def _variable_write(self, mgenc, variable_name, exp):
+    def _variable_write(self, mgenc, variable_name, exp_en, exp_un):
         variable = mgenc.get_local(variable_name)
         if variable:
             return variable.get_write_node(
-                mgenc.get_context_level(variable_name), exp)
+                mgenc.get_context_level(variable_name), exp_en, exp_un)
 
         field_name = self._universe.symbol_for(variable_name)
-        field_write = mgenc.get_object_field_write(field_name, exp,
-                                                   self._universe)
-        if field_write:
-            return field_write
+        field_write_en, field_write_un = mgenc.get_object_field_write(
+            field_name, exp_en, exp_un, self._universe)
+        if field_write_en:
+            return field_write_en, field_write_un
         else:
             raise RuntimeError("Neither a variable nor a field found in current"
                                " scope that is named " + variable_name +

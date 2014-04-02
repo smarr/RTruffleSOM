@@ -23,7 +23,14 @@ class ReturnNonLocalNode(ContextualNode):
         else:
             block      = frame.get_self()
             outer_self = ctx_frame.get_self()
-            return outer_self.send_escaped_block(block, self._universe)
+            if self._executes_enforced:
+                return outer_self.send_escaped_block_enforced(block,
+                                                              self._universe,
+                                                              frame.get_executing_domain())
+            else:
+                return outer_self.send_escaped_block_unenforced(block,
+                                                                self._universe,
+                                                                frame.get_executing_domain())
 
     def execute_void(self, frame):
         self.execute(frame)
@@ -34,8 +41,8 @@ class CatchNonLocalReturnNode(ExpressionNode):
     _immutable_fields_ = ['_method_body?']
     _child_nodes_      = ['_method_body']
 
-    def __init__(self, method_body, source_section = None):
-        ExpressionNode.__init__(self, source_section)
+    def __init__(self, method_body, executes_enforced, source_section = None):
+        ExpressionNode.__init__(self, executes_enforced, source_section)
         self._method_body = self.adopt_child(method_body)
 
     def execute(self, frame):

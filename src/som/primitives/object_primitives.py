@@ -7,7 +7,7 @@ from som.vmobjects.primitive import Primitive
 from som.vmobjects.array     import Array 
 
 
-def _equals(ivkbl, rcvr, args):
+def _equals(ivkbl, rcvr, args, domain):
     op1 = args[0]
     op2 = rcvr
     if op1 is op2:
@@ -16,12 +16,12 @@ def _equals(ivkbl, rcvr, args):
         return ivkbl.get_universe().falseObject
 
 
-def _hashcode(ivkbl, rcvr, args):
+def _hashcode(ivkbl, rcvr, args, domain):
     return ivkbl.get_universe().new_integer(
         compute_identity_hash(rcvr))
 
 
-def _objectSize(ivkbl, rcvr, args):
+def _objectSize(ivkbl, rcvr, args, domain):
     size = 0
     
     if isinstance(rcvr, Object):
@@ -32,48 +32,55 @@ def _objectSize(ivkbl, rcvr, args):
     return ivkbl.get_universe().new_integer(size)
 
 
-def _perform(ivkbl, rcvr, args):
+def _perform(ivkbl, rcvr, args, domain):
     selector = args[0]
 
     invokable = rcvr.get_class(ivkbl.get_universe()).lookup_invokable(selector)
-    return invokable.invoke(rcvr, None)
+
+    ## TODO: I think, statically doing unenforced here is wrong, needs
+    ##       take current execution state into account
+    return invokable.invoke_unenforced(rcvr, None, domain)
 
 
-def _performInSuperclass(ivkbl, rcvr, args):
+def _performInSuperclass(ivkbl, rcvr, args, domain):
     clazz    = args[1]
     selector = args[0]
 
     invokable = clazz.lookup_invokable(selector)
-    return invokable.invoke(rcvr, None)
+    ## TODO: I think, statically doing unenforced here is wrong, needs
+    ##       take current execution state into account
+    return invokable.invoke_unenforced(rcvr, None, domain)
 
 
-def _performWithArguments(ivkbl, rcvr, arguments):
-    arg_arr  = arguments[1].get_indexable_fields()
-    selector = arguments[0]
+def _performWithArguments(ivkbl, rcvr, args, domain):
+    arg_arr  = args[1].get_indexable_fields()
+    selector = args[0]
 
     invokable = rcvr.get_class(ivkbl.get_universe()).lookup_invokable(selector)
-    return invokable.invoke(rcvr, arg_arr)
+    ## TODO: I think, statically doing unenforced here is wrong, needs
+    ##       take current execution state into account
+    return invokable.invoke_unenforced(rcvr, arg_arr, domain)
 
 
-def _instVarAt(ivkbl, rcvr, args):
+def _instVarAt(ivkbl, rcvr, args, domain):
     idx  = args[0]
     return rcvr.get_field(idx.get_embedded_integer() - 1)
 
 
-def _instVarAtPut(ivkbl, rcvr, args):
+def _instVarAtPut(ivkbl, rcvr, args, domain):
     val  = args[1]
     idx  = args[0]
     rcvr.set_field(idx.get_embedded_integer() - 1, val)
     return val
 
 
-def _halt(ivkbl, rcvr, args):
+def _halt(ivkbl, rcvr, args, domain):
     # noop
     print "BREAKPOINT"
     return rcvr
 
 
-def _class(ivkbl, rcvr, args):
+def _class(ivkbl, rcvr, args, domain):
     return rcvr.get_class(ivkbl.get_universe())
     
 

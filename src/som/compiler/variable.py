@@ -33,6 +33,8 @@ class Variable(object):
         if context_level > 0:
             self._is_read_out_of_context = True
         return NonLocalSuperReadNode(context_level, holder_class_name,
+                                     on_class_side, universe), \
+               NonLocalSuperReadNode(context_level, holder_class_name,
                                      on_class_side, universe)
         # TODO: for later versions with specialization support
         # return UninitializedSuperReadNode(self, context_level,
@@ -47,8 +49,10 @@ class Argument(Variable):
     def get_read_node(self, context_level):
         Variable.get_read_node(self, context_level)
         if self._name == "self":
-            return NonLocalSelfReadNode(context_level, None)
-        return NonLocalVariableReadNode(context_level, self._frame_idx, True)
+            return NonLocalSelfReadNode(context_level, None), \
+                   NonLocalSelfReadNode(context_level, None)
+        return NonLocalVariableReadNode(context_level, self._frame_idx, True), \
+               NonLocalVariableReadNode(context_level, self._frame_idx, True)
 
 
 class Local(Variable):
@@ -67,13 +71,15 @@ class Local(Variable):
 
     def get_read_node(self, context_level):
         Variable.get_read_node(self, context_level)
-        return NonLocalVariableReadNode(context_level, self._frame_idx, False)
+        return NonLocalVariableReadNode(context_level, self._frame_idx, False), \
+               NonLocalVariableReadNode(context_level, self._frame_idx, False)
 
-    def get_write_node(self, context_level, value_expr):
+    def get_write_node(self, context_level, value_en, value_un):
         self._is_written = True
         if context_level > 0:
             self._is_written_out_of_context = True
         # TODO: for later versions with specialization support
         return NonLocalVariableWriteNode(context_level, self._frame_idx,
-                                         value_expr)
-        return UninitializedVariableWriteNode(self, context_level, value_expr)
+                                         value_en), \
+               NonLocalVariableWriteNode(context_level, self._frame_idx,
+                                         value_un)

@@ -7,9 +7,10 @@ from .variable                                 import Argument, Local
 from ..interpreter.nodes.field_node            import create_write_node, \
                                                       create_read_node
 from ..interpreter.nodes.global_read_node      import \
-    UninitializedGlobalReadNode
+    UninitializedGlobalReadNodeEnforced, UninitializedGlobalReadNodeUnenforced
 from ..interpreter.nodes.return_non_local_node import CatchNonLocalReturnNode
-from ..interpreter.invokable                   import Invokable
+from ..interpreter.invokable                   import Invokable, \
+    InvokableUnenforced
 
 from ..vmobjects.primitive                     import empty_primitive
 
@@ -24,6 +25,8 @@ class MethodGenerationContext(object):
         self._arguments   = OrderedDict()
         self._locals      = OrderedDict()
         self._primitive   = False  # to be changed
+
+        self._unenforced  = False
 
         self._embedded_block_methods = []
 
@@ -83,7 +86,7 @@ class MethodGenerationContext(object):
         # return ArgumentInitializationNode(writes, method_body,
         #                                   method_body.get_source_section())
 
-    def assemble(self, universe, method_body):
+    def assemble(self, universe, method_body_en, method_body_un):
         only_local_access = []
         non_local_access = []
         self._separate_variables(self._arguments.values(), only_local_access,
@@ -92,12 +95,23 @@ class MethodGenerationContext(object):
                                  non_local_access)
 
         if self.needs_to_catch_non_local_return():
-            method_body = CatchNonLocalReturnNode(method_body,
-                                                  method_body.get_source_section())
+            method_body_en = CatchNonLocalReturnNode(method_body_en,
+                                                     True,
+                                                     method_body_en.get_source_section())
+            method_body_un = CatchNonLocalReturnNode(method_body_un,
+                                                     False,
+                                                     method_body_un.get_source_section())
 
-        method_body = self._add_argument_initialization(method_body)
-        method = Invokable(self._get_source_section_for_method(method_body),
-                           method_body, len(self._locals), universe)
+        method_body_en = self._add_argument_initialization(method_body_en)
+        method_body_un = self._add_argument_initialization(method_body_un)
+
+        if self._unenforced:
+            method = InvokableUnenforced(self._get_source_section_for_method(method_body_un),
+                                         method_body_un, len(self._locals), universe)
+        else:
+            method = Invokable(self._get_source_section_for_method(method_body_un),
+                               method_body_en, method_body_un,
+                               len(self._locals), universe)
         return universe.new_method(self._signature, method, False,
                                    # copy list to make it immutable for RPython
                                    self._embedded_block_methods[:])
@@ -110,8 +124,11 @@ class MethodGenerationContext(object):
                                    source_section = src_body)
         return src_method
 
-    def set_primitive(self, boolean):
-        self._primitive = boolean
+    def set_primitive(self):
+        self._primitive = True
+
+    def set_unenforced(self):
+        self._unenforced = True
 
     def set_signature(self, sig):
         self._signature = sig
@@ -194,19 +211,23 @@ class MethodGenerationContext(object):
 
     def get_object_field_read(self, field_name):
         if not self.has_field(field_name):
-            return None
-        return create_read_node(self._get_self_read(),
-                             self.get_field_index(field_name))
+            return None, None
+        enforced, unenforced = self._get_self_read()
+        return create_read_node(enforced, unenforced,
+                                self.get_field_index(field_name))
 
-    def get_global_read(self, var_name, universe):
-        return UninitializedGlobalReadNode(var_name, universe)
+    @staticmethod
+    def get_global_read(var_name, universe):
+        return UninitializedGlobalReadNodeEnforced(var_name, universe), \
+               UninitializedGlobalReadNodeUnenforced(var_name, universe)
 
-    def get_object_field_write(self, field_name, exp, universe):
+    def get_object_field_write(self, field_name, value_en, value_un, universe):
         if not self.has_field(field_name):
-            return None
-        return create_write_node(self._get_self_read(),
-                              self.get_field_index(field_name),
-                              exp)
+            return None, None
+        self_en, self_un = self._get_self_read()
+        return create_write_node(self_en, self_un,
+                                 self.get_field_index(field_name),
+                                 value_en, value_un)
 
     def has_field(self, field):
         return self._holder_genc.has_field(field)

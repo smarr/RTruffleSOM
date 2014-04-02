@@ -1,14 +1,16 @@
 from .abstract_object import AbstractObject
 
+
 class Array(AbstractObject):
 
     _immutable_fields_ = ["_indexable_fields"]
     
-    def __init__(self, nilObject, number_of_indexable_fields):
+    def __init__(self, nilObject, number_of_indexable_fields, domain):
         AbstractObject.__init__(self)
-        
+
         # Private array of indexable fields
         self._indexable_fields = [nilObject] * number_of_indexable_fields
+        self._domain = domain
         
     def get_indexable_field(self, index):
         # Get the indexable field with the given index
@@ -41,3 +43,9 @@ class Array(AbstractObject):
 
     def get_class(self, universe):
         return universe.arrayClass
+
+    def get_domain(self, universe):
+        return self._domain
+
+    def set_domain(self, domain):
+        self._domain = domain
