@@ -74,6 +74,6 @@ def empty_primitive(signature_string, universe):
     return Primitive(signature_string, universe, _invoke, True)
 
 
-def _invoke(ivkbl, rcvr, args):
+def _invoke(ivkbl, rcvr, args, domain):
     """ Write a warning to the screen """
     print "Warning: undefined primitive %s called" % ivkbl.get_signature()
