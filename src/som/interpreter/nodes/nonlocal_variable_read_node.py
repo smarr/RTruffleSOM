@@ -8,8 +8,9 @@ class NonLocalVariableNode(ContextualNode):
     _immutable_fields_ = ["_is_argument", "_frame_idx"]
 
     def __init__(self, context_level, frame_idx, is_argument,
-                 source_section = None):
-        ContextualNode.__init__(self, context_level, source_section)
+                 executes_enforced, source_section):
+        ContextualNode.__init__(self, context_level, executes_enforced,
+                                source_section)
         self._is_argument   = is_argument
         self._frame_idx     = frame_idx
 
@@ -17,9 +18,10 @@ class NonLocalVariableNode(ContextualNode):
 class NonLocalVariableReadNode(NonLocalVariableNode):
 
     def __init__(self, context_level, frame_idx, is_argument,
-                 source_section = None):
+                 executes_enforced, source_section):
         NonLocalVariableNode.__init__(self, context_level, frame_idx,
-                                      is_argument, source_section)
+                                      is_argument, executes_enforced,
+                                      source_section)
 
     def execute(self, frame):
         ctx = self.determine_context(frame)
@@ -34,8 +36,9 @@ class NonLocalVariableReadNode(NonLocalVariableNode):
 
 class NonLocalSelfReadNode(ContextualNode):
 
-    def __init__(self, context_level, source_section):
-        ContextualNode.__init__(self, context_level, source_section)
+    def __init__(self, context_level, executes_enforced, source_section):
+        ContextualNode.__init__(self, context_level, executes_enforced,
+                                source_section)
 
     def execute(self, frame):
         ctx = self.determine_context(frame)
@@ -50,8 +53,9 @@ class NonLocalSuperReadNode(NonLocalSelfReadNode):
     _immutable_fields_ = ["_super_class_name", "_on_class_side", "_universe"]
 
     def __init__(self, context_level, super_class_name, on_class_side,
-                 universe, source_section = None):
-        NonLocalSelfReadNode.__init__(self, context_level, source_section)
+                 universe, executes_enforced, source_section):
+        NonLocalSelfReadNode.__init__(self, context_level, executes_enforced,
+                                      source_section)
         self._super_class_name = super_class_name
         self._on_class_side    = on_class_side
         self._universe         = universe
@@ -76,9 +80,9 @@ class NonLocalVariableWriteNode(NonLocalVariableNode):
     _child_nodes_      = ['_value_expr']
 
     def __init__(self, context_level, frame_idx, value_expr,
-                 source_section = None):
+                 executes_enforced, source_section):
         NonLocalVariableNode.__init__(self, context_level, frame_idx,
-                                      False, source_section)
+                                      False, executes_enforced, source_section)
         self._value_expr = self.adopt_child(value_expr)
 
     def execute(self, frame):

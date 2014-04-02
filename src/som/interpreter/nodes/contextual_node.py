@@ -8,6 +8,7 @@ class ContextualNode(ExpressionNode):
     _immutable_fields_ = ["_context_level"]
 
     def __init__(self, context_level, executes_enforced, source_section = None):
+        assert executes_enforced is True or executes_enforced is False
         ExpressionNode.__init__(self, executes_enforced, source_section)
         self._context_level = context_level
 

@@ -9,8 +9,8 @@ class ReturnNonLocalNode(ContextualNode):
     _immutable_fields_ = ['_expr?', '_universe']
     _child_nodes_      = ['_expr']
 
-    def __init__(self, context_level, expr, universe, source_section = None):
-        ContextualNode.__init__(self, context_level, source_section)
+    def __init__(self, context_level, expr, universe, executes_enforced, source_section = None):
+        ContextualNode.__init__(self, context_level, executes_enforced, source_section)
         self._expr     = self.adopt_child(expr)
         self._universe = universe
 

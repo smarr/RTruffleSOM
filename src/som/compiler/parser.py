@@ -379,9 +379,9 @@ class Parser(object):
 
         if mgenc.is_block_method():
             enforced_return   = ReturnNonLocalNode(mgenc.get_outer_self_context_level(),
-                                                   enforced, self._universe)
+                                                   enforced,   self._universe, True)
             unenforced_return = ReturnNonLocalNode(mgenc.get_outer_self_context_level(),
-                                                   unenforced, self._universe)
+                                                   unenforced, self._universe, False)
             mgenc.make_catch_non_local_return()
             return self._assign_source(enforced_return,   coord), \
                    self._assign_source(unenforced_return, coord)
