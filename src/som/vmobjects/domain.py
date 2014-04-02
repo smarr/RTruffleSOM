@@ -14,3 +14,6 @@ class Domain(Object):
 
     def get_domain_for_new_objects(self):
         return self._field1
+
+    def request_primitive_execution(self, prim, rcvr, args):
+        raise RuntimeError("Not Yet Implemented!")
