@@ -24,18 +24,18 @@ class AbstractToByDoNode(AbstractToDoNode):
         limit = self._limit_expr.execute(frame)
         step  = self._step_expr.execute(frame)
         body  = self._body_expr.execute(frame)
-        self._to_by_loop_void(rcvr, limit, step, body)
+        self._to_by_loop_void(rcvr, limit, step, body, frame.get_executing_domain())
         return rcvr
     
     def execute_void(self, frame):
         self.execute(frame)
 
     def execute_evaluated(self, frame, rcvr, args):
-        self._to_by_loop_void(rcvr, args[0], args[1], args[2])
+        self._to_by_loop_void(rcvr, args[0], args[1], args[2], frame.get_executing_domain())
         return rcvr
     
     def execute_evaluated_void(self, frame, rcvr, args):
-        self._to_by_loop_void(rcvr, args[0], args[1], args[2])
+        self._to_by_loop_void(rcvr, args[0], args[1], args[2], frame.get_executing_domain())
 
 
 def get_printable_location(block_method):
@@ -52,7 +52,7 @@ int_driver = jit.JitDriver(
 
 class IntToIntByDoNode(AbstractToByDoNode):
 
-    def _to_by_loop_void(self, rcvr, limit, step, body_block):
+    def _to_by_loop_void(self, rcvr, limit, step, body_block, domain):
         block_method = body_block.get_method()
 
         i   = rcvr.get_embedded_integer()
@@ -60,8 +60,14 @@ class IntToIntByDoNode(AbstractToByDoNode):
         by  = step.get_embedded_integer()
         while i <= top:
             int_driver.jit_merge_point(block_method = block_method)
-            block_method.invoke(body_block,
-                                [self._universe.new_integer(i)])
+            if self._executes_enforced:
+                block_method.invoke_enforced(body_block,
+                                             [self._universe.new_integer(i)],
+                                             domain)
+            else:
+                block_method.invoke_unenforced(body_block,
+                                               [self._universe.new_integer(i)],
+                                               domain)
             i += by
 
     @staticmethod
@@ -88,7 +94,7 @@ double_driver = jit.JitDriver(
 
 class IntToDoubleByDoNode(AbstractToByDoNode):
 
-    def _to_by_loop_void(self, rcvr, limit, step, body_block):
+    def _to_by_loop_void(self, rcvr, limit, step, body_block, domain):
         block_method = body_block.get_method()
 
         i   = rcvr.get_embedded_integer()
@@ -96,8 +102,14 @@ class IntToDoubleByDoNode(AbstractToByDoNode):
         by  = step.get_embedded_integer()
         while i <= top:
             double_driver.jit_merge_point(block_method = block_method)
-            block_method.invoke(body_block,
-                                [self._universe.new_integer(i)])
+            if self._executes_enforced:
+                block_method.invoke_enforced(body_block,
+                                             [self._universe.new_integer(i)],
+                                             domain)
+            else:
+                block_method.invoke_unenforced(body_block,
+                                               [self._universe.new_integer(i)],
+                                               domain)
             i += by
 
     @staticmethod

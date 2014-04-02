@@ -85,8 +85,8 @@ class InvokableUnenforced(Invokable):
         Invokable.__init__(self, source_section, body_unenforced,
                            body_unenforced, number_of_temps, universe)
 
-    def invoke_enforced(self, receiver, arguments):
-        return self._do_invoke(receiver, arguments, False, False)
+    def invoke_enforced(self, receiver, arguments, domain):
+        return self._do_invoke(receiver, arguments, domain, False, False)
 
-    def invoke_enforced_void(self, receiver, arguments):
-        self._do_invoke(receiver, arguments, True, False)
+    def invoke_enforced_void(self, receiver, arguments, domain):
+        self._do_invoke(receiver, arguments, domain, True, False)
