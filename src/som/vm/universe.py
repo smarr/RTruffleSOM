@@ -217,9 +217,11 @@ class Universe(object):
         self.primitiveClass  = self.new_system_class(self.standardDomain)
         self.stringClass     = self.new_system_class(self.standardDomain)
         self.doubleClass     = self.new_system_class(self.standardDomain)
+        self.domainClass     = self.new_system_class(self.standardDomain)
 
-        # Setup the class reference for the nil object
+        # Setup the class reference for the nil object and standard domain
         self.nilObject.set_class(self.nilClass)
+        self.standardDomain.set_class(self.domainClass)
 
         # Initialize the system classes
         self._initialize_system_class(self.objectClass,                 None, "Object")
@@ -234,6 +236,7 @@ class Universe(object):
         self._initialize_system_class(self.primitiveClass,  self.objectClass, "Primitive")
         self._initialize_system_class(self.stringClass,     self.objectClass, "String")
         self._initialize_system_class(self.doubleClass,     self.objectClass, "Double")
+        self._initialize_system_class(self.domainClass,     self.objectClass, "Domain")
 
         # Load methods and fields into the system classes
         self._load_system_class(self.objectClass)
@@ -248,6 +251,7 @@ class Universe(object):
         self._load_system_class(self.primitiveClass)
         self._load_system_class(self.stringClass)
         self._load_system_class(self.doubleClass)
+        self._load_system_class(self.domainClass)
 
         # Load the generic block class
         self.blockClass = self.load_class(self.symbol_for("Block"))
