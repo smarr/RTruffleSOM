@@ -1,28 +1,38 @@
 from som.primitives.primitives import Primitives
 from som.vm.universe import get_current
 from som.vmobjects.abstract_object import AbstractObject
+from som.vmobjects.block import Block
+from som.vmobjects.domain import Domain
+from som.vmobjects.object import Object
 from som.vmobjects.primitive import Primitive
 
 
 def _domain_of(ivkbl, rcvr, args, domain):
-    assert isinstance(rcvr, AbstractObject)
+    assert isinstance(args[0], AbstractObject)
     return rcvr.get_domain(get_current())
 
 
 def _set_domain_of_to(ivkbl, rcvr, args, domain):
-    raise RuntimeError("Not yet implemented")
+    assert isinstance(args[0], AbstractObject)
+    assert isinstance(args[1], Object)
+    rcvr.set_domain(args[1])
+    return rcvr
 
 
 def _evaluate_in(ivkbl, rcvr, args, domain):
-    raise RuntimeError("Not yet implemented")
+    assert isinstance(args[0], Block)
+    assert isinstance(args[1], Object)
+    return rcvr.get_method().invoke_unenforced(args[0], None, args[1])
 
 
 def _evaluated_enforced_in(ivkbl, rcvr, args, domain):
-    raise RuntimeError("Not yet implemented")
+    assert isinstance(args[0], Block)
+    assert isinstance(args[1], Object)
+    return args[0].get_method().invoke_enforced(args[0], None, args[1])
 
 
 def _current_domain(ivkbl, rcvr, args, domain):
-    raise RuntimeError("Not yet implemented")
+    return domain
 
 
 def _executes_enforced(ivkbl, rcvr, args, domain):
