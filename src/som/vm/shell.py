@@ -44,7 +44,8 @@ class Shell(object):
                         self._universe.symbol_for("run:"))
 
                     # Invoke the run method
-                    it = initialize.invoke(my_object, [it])
+                    it = initialize.invoke_unenforced(my_object, [it],
+                                                      self._universe.standardDomain)
             except Exception as e:
                 if not we_are_translated():  # this cannot be done in rpython
                     import traceback

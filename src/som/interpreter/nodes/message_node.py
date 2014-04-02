@@ -1,4 +1,5 @@
 from .expression_node import ExpressionNode
+from som.vmobjects.abstract_object import AbstractObject
 
 from .specialized.if_true_false import IfTrueIfFalseNode, IfNode
 from .specialized.to_do_node    import IntToIntDoNode, IntToDoubleDoNode
@@ -29,7 +30,7 @@ class AbstractMessageNode(ExpressionNode):
     @unroll_safe
     def _evaluate_rcvr_and_args(self, frame):
         rcvr = self._rcvr_expr.execute(frame)
-        assert rcvr is not None
+        assert isinstance(rcvr, AbstractObject)
         if self._arg_exprs:
             args = [arg_exp.execute(frame) for arg_exp in self._arg_exprs]
         else:
@@ -137,7 +138,8 @@ class GenericMessageNodeEnforced(AbstractGenericMessageNode):
                                         frame.get_executing_domain())
         else:
             rcvr.send_does_not_understand_enforced_void(self._selector, args,
-                                                        self._universe)
+                                                        self._universe,
+                                                        frame.get_executing_domain())
 
     def execute_evaluated(self, frame, rcvr, args):
         method = self._lookup_method(rcvr)
@@ -146,7 +148,8 @@ class GenericMessageNodeEnforced(AbstractGenericMessageNode):
                                           frame.get_executing_domain())
         else:
             return rcvr.send_does_not_understand_enforced(self._selector, args,
-                                                          self._universe)
+                                                          self._universe,
+                                                          frame.get_executing_domain())
 
 
 class GenericMessageNodeUnenforced(AbstractGenericMessageNode):
@@ -163,14 +166,18 @@ class GenericMessageNodeUnenforced(AbstractGenericMessageNode):
                                           frame.get_executing_domain())
         else:
             rcvr.send_does_not_understand_unenforced_void(self._selector, args,
-                                                          self._universe)
+                                                          self._universe,
+                                                          frame.get_executing_domain())
 
     def execute_evaluated(self, frame, rcvr, args):
         method = self._lookup_method(rcvr)
         if method:
-            return method.invoke_unenforced(rcvr, args,
+            result = method.invoke_unenforced(rcvr, args,
                                             frame.get_executing_domain())
         else:
-            return rcvr.send_does_not_understand_unenforced(self._selector,
+            result = rcvr.send_does_not_understand_unenforced(self._selector,
                                                             args,
-                                                            self._universe)
+                                                            self._universe,
+                                                            frame.get_executing_domain())
+        assert isinstance(result, AbstractObject)
+        return result
