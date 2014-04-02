@@ -2,7 +2,6 @@ from som.primitives.primitives import Primitives
 from som.vm.universe import get_current
 from som.vmobjects.abstract_object import AbstractObject
 from som.vmobjects.block import Block
-from som.vmobjects.domain import Domain
 from som.vmobjects.object import Object
 from som.vmobjects.primitive import Primitive
 
@@ -22,7 +21,7 @@ def _set_domain_of_to(ivkbl, rcvr, args, domain):
 def _evaluate_in(ivkbl, rcvr, args, domain):
     assert isinstance(args[0], Block)
     assert isinstance(args[1], Object)
-    return rcvr.get_method().invoke_unenforced(args[0], None, args[1])
+    return args[0].get_method().invoke_unenforced(args[0], None, args[1])
 
 
 def _evaluated_enforced_in(ivkbl, rcvr, args, domain):
