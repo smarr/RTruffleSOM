@@ -96,7 +96,7 @@ class Parser(object):
         self._expect(Symbol.NewTerm)
         self._instance_fields(cgenc)
         
-        while (self._sym == Symbol.Identifier or self._sym == Symbol.Keyword or 
+        while (self._sym_is_identifier() or self._sym == Symbol.Keyword or
                self._sym == Symbol.OperatorSequence or
                self._sym_in(self._binary_op_syms)):
             mgenc = MethodGenerationContext()
@@ -117,7 +117,7 @@ class Parser(object):
             cgenc.set_class_side(True)
             self._class_fields(cgenc)
             
-            while (self._sym == Symbol.Identifier or
+            while (self._sym_is_identifier()      or
                    self._sym == Symbol.Keyword    or
                    self._sym == Symbol.OperatorSequence or
                    self._sym_in(self._binary_op_syms)):
@@ -174,6 +174,9 @@ class Parser(object):
     def _sym_in(self, symbol_list):
         return self._sym in symbol_list
 
+    def _sym_is_identifier(self):
+        return self._sym == Symbol.Identifier or self._sym == Symbol.Primitive
+
     def _accept(self, s):
         if self._sym == s:
             self._get_symbol_from_lexer()
@@ -201,14 +204,14 @@ class Parser(object):
 
     def _instance_fields(self, cgenc):
         if self._accept(Symbol.Or):
-            while self._sym == Symbol.Identifier:
+            while self._sym_is_identifier():
                 var = self._variable()
                 cgenc.add_instance_field(self._universe.symbol_for(var))
             self._expect(Symbol.Or)
  
     def _class_fields(self, cgenc):
         if self._accept(Symbol.Or):
-            while self._sym == Symbol.Identifier:
+            while self._sym_is_identifier():
                 var = self._variable()
                 cgenc.add_class_field(self._universe.symbol_for(var))
             self._expect(Symbol.Or)
@@ -249,7 +252,7 @@ class Parser(object):
         return None, None
 
     def _pattern(self, mgenc):
-        if self._sym == Symbol.Identifier:
+        if self._sym_is_identifier():
             self._unary_pattern(mgenc)
         elif self._sym == Symbol.Keyword:
             self._keyword_pattern(mgenc)
@@ -318,7 +321,7 @@ class Parser(object):
         return self._block_body(mgenc)
 
     def _locals(self, mgenc):
-        while self._sym == Symbol.Identifier:
+        while self._sym_is_identifier():
             mgenc.add_local_if_absent(self._variable())
 
     def _self_read(self, mgenc):
@@ -406,7 +409,7 @@ class Parser(object):
     def _assignments(self, mgenc):
         coord = self._lexer.get_source_coordinate()
 
-        if self._sym != Symbol.Identifier:
+        if not self._sym_is_identifier():
             raise ParseError("Assignments should always target variables or"
                              " fields, but found instead a %(found)s",
                              Symbol.Identifier, self)
@@ -431,7 +434,7 @@ class Parser(object):
     def _evaluation(self, mgenc):
         enforced, unenforced = self._primary(mgenc)
  
-        if (self._sym == Symbol.Identifier       or
+        if (self._sym_is_identifier()            or
             self._sym == Symbol.Keyword          or 
             self._sym == Symbol.OperatorSequence or
             self._sym_in(self._binary_op_syms)):
@@ -439,7 +442,7 @@ class Parser(object):
         return enforced, unenforced
  
     def _primary(self, mgenc):
-        if self._sym == Symbol.Identifier:
+        if self._sym_is_identifier():
             coordinate = self._lexer.get_source_coordinate()
             var_name = self._variable()
             read_en, read_un = self._variable_read(mgenc, var_name)
@@ -481,7 +484,7 @@ class Parser(object):
         msg_en = receiver_en
         msg_un = receiver_un
 
-        while self._sym == Symbol.Identifier:
+        while self._sym_is_identifier():
             msg_en, msg_un = self._unary_message(msg_en, msg_un)
 
         while (self._sym == Symbol.OperatorSequence or
@@ -518,7 +521,7 @@ class Parser(object):
     def _binary_operand(self, mgenc):
         operand_en, operand_un = self._primary(mgenc)
  
-        while self._sym == Symbol.Identifier:
+        while self._sym_is_identifier():
             operand_en, operand_un = self._unary_message(operand_en, operand_un)
         return operand_en, operand_un
 
