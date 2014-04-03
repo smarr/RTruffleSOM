@@ -87,12 +87,12 @@ class MethodGenerationContext(object):
         #                                   method_body.get_source_section())
 
     def assemble(self, universe, method_body_en, method_body_un):
-        only_local_access = []
-        non_local_access = []
-        self._separate_variables(self._arguments.values(), only_local_access,
-                                 non_local_access)
-        self._separate_variables(self._locals.values(), only_local_access,
-                                 non_local_access)
+        # only_local_access = []
+        # non_local_access = []
+        # self._separate_variables(self._arguments.values(), only_local_access,
+        #                          non_local_access)
+        # self._separate_variables(self._locals.values(), only_local_access,
+        #                          non_local_access)
 
         if self.needs_to_catch_non_local_return():
             method_body_en = CatchNonLocalReturnNode(method_body_en,
