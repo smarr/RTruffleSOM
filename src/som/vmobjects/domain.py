@@ -1,3 +1,4 @@
+from som.vmobjects.abstract_object import AbstractObject
 from som.vmobjects.object import Object
 
 
@@ -22,8 +23,19 @@ def read_global(domain, symbol, universe):
 
 def read_field_of(domain, field_idx, obj, universe):
     assert isinstance(obj, Object)
+    assert field_idx >= 0
     return domain.send_unenforced("readField:of:",
                                   ## REM: need to pass on idx + 1 because on the
                                   ##      SOM site, we have 1-based offsets
                                   [universe.new_integer(field_idx + 1), obj],
+                                  universe, domain)
+
+
+def write_to_field_of(domain, value, field_idx, obj, universe):
+    assert isinstance(obj, Object)
+    assert isinstance(value, AbstractObject)
+    assert field_idx >= 0
+    return domain.send_unenforced("write:toField:of:",
+                                  [value, universe.new_integer(field_idx + 1),
+                                   obj],
                                   universe, domain)

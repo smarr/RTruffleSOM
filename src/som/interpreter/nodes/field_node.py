@@ -1,7 +1,7 @@
 from .expression_node import ExpressionNode
 
 from som.vmobjects.abstract_object import AbstractObject
-from som.vmobjects.domain import read_field_of
+from som.vmobjects.domain import read_field_of, write_to_field_of
 from som.vmobjects.object          import Object
 
 
@@ -88,7 +88,7 @@ class _AbstractFieldWriteNode(_AbstractFieldNode):
         value    = self._value_exp.execute(frame)
         assert isinstance(self_obj, Object)
         assert isinstance(value, AbstractObject)
-        self.write(self_obj, value)
+        self.write(frame, self_obj, value)
         return value
     
     def execute_void(self, frame):
@@ -104,7 +104,7 @@ class _AbstractUnenforcedFieldWriteNode(_AbstractFieldWriteNode):
 
 def _make_field_write_node_class(field_idx):
     class _UnenforcedFieldWriteNodeI(_AbstractUnenforcedFieldWriteNode):
-        def write(self, self_obj, value):
+        def write(self, frame, self_obj, value):
             return setattr(self_obj, "_field" + str(field_idx), value)
     return _UnenforcedFieldWriteNodeI
 
@@ -123,7 +123,7 @@ class UnenforcedFieldWriteNodeN(_AbstractUnenforcedFieldWriteNode):
         assert extension_index >= 0
         self._extension_index = extension_index
 
-    def write(self, self_obj, value):
+    def write(self, frame, self_obj, value):
         self_obj._fields[self._extension_index] = value
 
 
@@ -138,11 +138,9 @@ class EnforcedFieldWriteNode(_AbstractFieldWriteNode):
         self._field_idx = field_idx ## TODO: should probably convert it already into an SOM Integer
         self._universe  = universe
 
-    def execute(self, frame):
-        raise RuntimeError("Not yet implemented")
-
-    def execute_void(self, frame):
-        raise RuntimeError("Not yet implemented")
+    def write(self, frame, self_obj, value):
+        return write_to_field_of(frame.get_executing_domain(), value,
+                                 self._field_idx, self_obj, self._universe)
 
 _field_read_node_classes  = _make_field_read_node_classes(Object.NUMBER_OF_DIRECT_FIELDS)
 _field_write_node_classes = _make_field_write_node_classes(Object.NUMBER_OF_DIRECT_FIELDS)
