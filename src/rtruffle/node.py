@@ -80,7 +80,7 @@ class Node(AbstractNode):
         return self._source_section
 
     def adopt_child(self, node):
-        assert isinstance(node, Node)
+        assert isinstance(node, Node) or node is None
         if node:
             node._parent = self
         return node
