@@ -7,7 +7,8 @@ class Class(Object):
     _immutable_fields_ = ["_super_class"
                           "_name",
                           "_instance_fields"
-                          "_instance_invokables"]
+                          "_instance_invokables",
+                          "_universe"]
     
     def __init__(self, universe, number_of_fields = -1, obj_class = None,
                  domain = None):
