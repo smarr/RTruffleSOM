@@ -12,7 +12,7 @@ jitdriver = jit.JitDriver(
      greens=['self', 'executing_domain'],
      # virtualizables=['caller_frame'])
       get_printable_location=get_printable_location,
-     reds= ['do_void', 'arguments', 'receiver', 'frame'],
+     reds= ['do_void', 'enforced', 'arguments', 'receiver', 'frame'],
 
      # the next line is a workaround around a likely bug in RPython
      # for some reason, the inlining heuristics default to "never inline" when
@@ -62,6 +62,7 @@ class Invokable(Node):
                                   arguments = arguments,
                                   frame     = frame,
                                   executing_domain = executing_domain,
+                                  enforced = enforced,
                                   do_void = do_void)
         
         if enforced:
