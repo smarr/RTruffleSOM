@@ -1,4 +1,5 @@
 from .expression_node import ExpressionNode
+from som.vmobjects.domain import read_global
 
 
 class AbstractUninitializedGlobalReadNode(ExpressionNode):
@@ -20,6 +21,14 @@ class UninitializedGlobalReadNodeEnforced(AbstractUninitializedGlobalReadNode):
         AbstractUninitializedGlobalReadNode.__init__(self, global_name,
                                                      universe, True,
                                                      source_section)
+
+    def execute(self, frame):
+        ## TODO: add optimizations...
+        return read_global(frame.get_executing_domain(), self._global_name,
+                           self._universe)
+
+    def execute_void(self, frame):
+        self.execute(frame)
 
 
 class UninitializedGlobalReadNodeUnenforced(AbstractUninitializedGlobalReadNode):
