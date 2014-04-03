@@ -17,7 +17,7 @@ from ..vmobjects.primitive                     import empty_primitive
 
 class MethodGenerationContext(object):
     
-    def __init__(self):
+    def __init__(self, universe):
         self._holder_genc = None
         self._outer_genc  = None
         self._block_method = False
@@ -33,6 +33,8 @@ class MethodGenerationContext(object):
         self._throws_non_local_return             = False
         self._needs_to_catch_non_local_returns    = False
         self._accesses_variables_of_outer_context = False
+
+        self._universe = universe
   
     def set_holder(self, cgenc):
         self._holder_genc = cgenc
@@ -63,8 +65,8 @@ class MethodGenerationContext(object):
     def needs_to_catch_non_local_return(self):
         return self._needs_to_catch_non_local_returns
 
-    def assemble_primitive(self, universe):
-        return empty_primitive(self._signature.get_string(), universe)
+    def assemble_primitive(self):
+        return empty_primitive(self._signature.get_string(), self._universe)
 
     @staticmethod
     def _separate_variables(variables, only_local_access,
@@ -86,7 +88,7 @@ class MethodGenerationContext(object):
         # return ArgumentInitializationNode(writes, method_body,
         #                                   method_body.get_source_section())
 
-    def assemble(self, universe, method_body_en, method_body_un):
+    def assemble(self, method_body_en, method_body_un):
         # only_local_access = []
         # non_local_access = []
         # self._separate_variables(self._arguments.values(), only_local_access,
@@ -107,14 +109,14 @@ class MethodGenerationContext(object):
 
         if self._unenforced:
             method = InvokableUnenforced(self._get_source_section_for_method(method_body_un),
-                                         method_body_un, len(self._locals), universe)
+                                         method_body_un, len(self._locals), self._universe)
         else:
             method = Invokable(self._get_source_section_for_method(method_body_un),
                                method_body_en, method_body_un,
-                               len(self._locals), universe)
-        return universe.new_method(self._signature, method, False,
-                                   # copy list to make it immutable for RPython
-                                   self._embedded_block_methods[:])
+                               len(self._locals), self._universe)
+        return self._universe.new_method(self._signature, method, False,
+                                         # copy list to make it immutable for RPython
+                                         self._embedded_block_methods[:])
 
     def _get_source_section_for_method(self, expr):
         src_body = expr.get_source_section()
@@ -214,20 +216,19 @@ class MethodGenerationContext(object):
             return None, None
         enforced, unenforced = self._get_self_read()
         return create_read_node(enforced, unenforced,
-                                self.get_field_index(field_name))
+                                self.get_field_index(field_name), self._universe)
 
-    @staticmethod
-    def get_global_read(var_name, universe):
-        return UninitializedGlobalReadNodeEnforced(var_name, universe), \
-               UninitializedGlobalReadNodeUnenforced(var_name, universe)
+    def get_global_read(self, var_name):
+        return UninitializedGlobalReadNodeEnforced(var_name, self._universe), \
+               UninitializedGlobalReadNodeUnenforced(var_name, self._universe)
 
-    def get_object_field_write(self, field_name, value_en, value_un, universe):
+    def get_object_field_write(self, field_name, value_en, value_un):
         if not self.has_field(field_name):
             return None, None
         self_en, self_un = self._get_self_read()
         return create_write_node(self_en, self_un,
                                  self.get_field_index(field_name),
-                                 value_en, value_un)
+                                 value_en, value_un, self._universe)
 
     def has_field(self, field):
         return self._holder_genc.has_field(field)

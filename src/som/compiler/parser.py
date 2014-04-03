@@ -99,19 +99,17 @@ class Parser(object):
         while (self._sym_is_identifier() or self._sym == Symbol.Keyword or
                self._sym == Symbol.OperatorSequence or
                self._sym_in(self._binary_op_syms)):
-            mgenc = MethodGenerationContext()
+            mgenc = MethodGenerationContext(self._universe)
             mgenc.set_holder(cgenc)
             mgenc.add_argument("self")
          
             method_body_en, method_body_un = self._method(mgenc)
          
             if mgenc.is_primitive():
-                cgenc.add_instance_method(
-                    mgenc.assemble_primitive(self._universe))
+                cgenc.add_instance_method(mgenc.assemble_primitive())
             else:
                 cgenc.add_instance_method(
-                    mgenc.assemble(self._universe, method_body_en,
-                                   method_body_un))
+                    mgenc.assemble(method_body_en, method_body_un))
 
         if self._accept(Symbol.Separator):
             cgenc.set_class_side(True)
@@ -121,19 +119,17 @@ class Parser(object):
                    self._sym == Symbol.Keyword    or
                    self._sym == Symbol.OperatorSequence or
                    self._sym_in(self._binary_op_syms)):
-                mgenc = MethodGenerationContext()
+                mgenc = MethodGenerationContext(self._universe)
                 mgenc.set_holder(cgenc)
                 mgenc.add_argument("self")
          
                 method_body_en, method_body_un = self._method(mgenc)
          
                 if mgenc.is_primitive():
-                    cgenc.add_class_method(
-                        mgenc.assemble_primitive(self._universe))
+                    cgenc.add_class_method(mgenc.assemble_primitive())
                 else:
                     cgenc.add_class_method(
-                        mgenc.assemble(self._universe, method_body_en,
-                                       method_body_un))
+                        mgenc.assemble(method_body_en, method_body_un))
         
         self._expect(Symbol.EndTerm)
 
@@ -454,14 +450,13 @@ class Parser(object):
 
         if self._sym == Symbol.NewBlock:
             coordinate = self._lexer.get_source_coordinate()
-            bgenc = MethodGenerationContext()
+            bgenc = MethodGenerationContext(self._universe)
             bgenc.set_is_block_method(True)
             bgenc.set_holder(mgenc.get_holder())
             bgenc.set_outer(mgenc)
  
             block_body_en, block_body_un = self._nested_block(bgenc)
-            block_method = bgenc.assemble(self._universe, block_body_en,
-                                          block_body_un)
+            block_method = bgenc.assemble(block_body_en, block_body_un)
             mgenc.add_embedded_block_method(block_method)
 
             if bgenc.requires_context():
@@ -704,7 +699,7 @@ class Parser(object):
             return field_read_en, field_read_un
 
         # nope, so, it is a global?
-        return mgenc.get_global_read(var_symbol, self._universe)
+        return mgenc.get_global_read(var_symbol)
 
     def _variable_write(self, mgenc, variable_name, exp_en, exp_un):
         variable = mgenc.get_local(variable_name)
@@ -714,7 +709,7 @@ class Parser(object):
 
         field_name = self._universe.symbol_for(variable_name)
         field_write_en, field_write_un = mgenc.get_object_field_write(
-            field_name, exp_en, exp_un, self._universe)
+            field_name, exp_en, exp_un)
         if field_write_en:
             return field_write_en, field_write_un
         else:
