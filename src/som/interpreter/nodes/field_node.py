@@ -1,5 +1,7 @@
 from .expression_node import ExpressionNode
+
 from som.vmobjects.abstract_object import AbstractObject
+from som.vmobjects.domain import read_field_of
 from som.vmobjects.object          import Object
 
 
@@ -54,19 +56,22 @@ class UnenforcedFieldReadNodeN(_AbstractUnenforcedFieldReadNode):
 
 class EnforcedFieldReadNode(_AbstractFieldNode):
 
-    _immutable_fields_ = ["_field_idx"]
+    _immutable_fields_ = ["_field_idx", "_universe"]
 
     ## TODO: consider using the field name instead of the index, to make it nicer...
 
-    def __init__(self, self_exp, field_idx, source_section = None):
+    def __init__(self, self_exp, field_idx, universe, source_section = None):
         _AbstractFieldNode.__init__(self, self_exp, True, source_section)
         self._field_idx = field_idx ## TODO: should probably convert it already into an SOM Integer
+        self._universe  = universe
 
     def execute(self, frame):
-        raise RuntimeError("Not yet implemented")
+        self_obj = self._self_exp.execute(frame)
+        return read_field_of(frame.get_executing_domain(), self._field_idx,
+                             self_obj, self._universe)
 
     def execute_void(self, frame):
-        raise RuntimeError("Not yet implemented")
+        self.execute(frame)
 
 
 class _AbstractFieldWriteNode(_AbstractFieldNode):
@@ -124,13 +129,14 @@ class UnenforcedFieldWriteNodeN(_AbstractUnenforcedFieldWriteNode):
 
 class EnforcedFieldWriteNode(_AbstractFieldWriteNode):
 
-    _immutable_fields_ = ["_field_idx"]
+    _immutable_fields_ = ["_field_idx", "_universe"]
 
     ## TODO: consider using the field name instead of the index, to make it nicer...
 
-    def __init__(self, self_exp, field_idx, value_exp, source_section = None):
+    def __init__(self, self_exp, field_idx, value_exp, universe, source_section = None):
         _AbstractFieldWriteNode.__init__(self, self_exp, value_exp, True, source_section)
         self._field_idx = field_idx ## TODO: should probably convert it already into an SOM Integer
+        self._universe  = universe
 
     def execute(self, frame):
         raise RuntimeError("Not yet implemented")
@@ -142,19 +148,19 @@ _field_read_node_classes  = _make_field_read_node_classes(Object.NUMBER_OF_DIREC
 _field_write_node_classes = _make_field_write_node_classes(Object.NUMBER_OF_DIRECT_FIELDS)
 
 
-def create_read_node(self_exp_en, self_exp_un, index):
+def create_read_node(self_exp_en, self_exp_un, index, universe):
     if index < Object.NUMBER_OF_DIRECT_FIELDS:
-        return EnforcedFieldReadNode(self_exp_en, index),\
+        return EnforcedFieldReadNode(self_exp_en, index, universe),\
                _field_read_node_classes[index](self_exp_un)
     else:
-        return EnforcedFieldReadNode(self_exp_en, index),\
+        return EnforcedFieldReadNode(self_exp_en, index, universe),\
                UnenforcedFieldReadNodeN(self_exp_un, index - Object.NUMBER_OF_DIRECT_FIELDS)
 
 
-def create_write_node(self_en, self_un, index, value_en, value_un):
+def create_write_node(self_en, self_un, index, value_en, value_un, universe):
     if index < Object.NUMBER_OF_DIRECT_FIELDS:
-        return EnforcedFieldWriteNode(self_en, index, value_en), \
+        return EnforcedFieldWriteNode(self_en, index, value_en, universe), \
                _field_write_node_classes[index](self_un, value_un)
     else:
-        return EnforcedFieldWriteNode(self_en, index, value_en), \
+        return EnforcedFieldWriteNode(self_en, index, value_en, universe), \
                UnenforcedFieldWriteNodeN(self_un, value_un, index - Object.NUMBER_OF_DIRECT_FIELDS)
