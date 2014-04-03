@@ -15,8 +15,13 @@ def _signature(ivkbl, rcvr, args, domain):
 def _invoke_on_with(ivkbl, rcvr, args, domain):
     assert isinstance(rcvr,    Primitive)
     assert isinstance(args[0], AbstractObject)
-    assert isinstance(args[1], Array) or args[1] is None
-    return rcvr.invoke_unenforced(args[0], args[1], domain)
+    assert isinstance(args[1], Array) or args[1] is ivkbl.get_universe().nilObject
+
+    if args[1] is ivkbl.get_universe().nilObject:
+        direct_args = None
+    else:
+        direct_args = args[1].get_indexable_fields()
+    return rcvr.invoke_unenforced(args[0], direct_args, domain)
 
 
 class PrimitivePrimitives(Primitives):
