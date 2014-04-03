@@ -1,5 +1,4 @@
 from som.primitives.primitives import Primitives
-from som.vm.universe import get_current
 from som.vmobjects.abstract_object import AbstractObject
 from som.vmobjects.block import Block
 from som.vmobjects.object import Object
@@ -8,7 +7,7 @@ from som.vmobjects.primitive import Primitive
 
 def _domain_of(ivkbl, rcvr, args, domain):
     assert isinstance(args[0], AbstractObject)
-    return rcvr.get_domain(get_current())
+    return rcvr.get_domain(ivkbl.get_universe())
 
 
 def _set_domain_of_to(ivkbl, rcvr, args, domain):
