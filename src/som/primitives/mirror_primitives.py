@@ -7,13 +7,13 @@ from som.vmobjects.primitive import Primitive
 
 def _domain_of(ivkbl, rcvr, args, domain):
     assert isinstance(args[0], AbstractObject)
-    return rcvr.get_domain(ivkbl.get_universe())
+    return args[0].get_domain(ivkbl.get_universe())
 
 
 def _set_domain_of_to(ivkbl, rcvr, args, domain):
     assert isinstance(args[0], AbstractObject)
     assert isinstance(args[1], Object)
-    rcvr.set_domain(args[1])
+    args[0].set_domain(args[1])
     return rcvr
 
 
