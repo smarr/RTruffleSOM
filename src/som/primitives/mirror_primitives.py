@@ -34,11 +34,13 @@ def _current_domain(ivkbl, rcvr, args, domain):
 
 
 def _executes_enforced(ivkbl, rcvr, args, domain):
-    raise RuntimeError("Not yet implemented")
+    ## TODO: find a way to implement this
+    return ivkbl.get_universe().falseObject
 
 
 def _executes_unenforced(ivkbl, rcvr, args, domain):
-    raise RuntimeError("Not yet implemented")
+    ## TODO: find a way to implement this
+    return ivkbl.get_universe().falseObject
 
 
 class MirrorPrimitives(Primitives):
