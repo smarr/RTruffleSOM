@@ -3,16 +3,16 @@ from som.vmobjects.domain import request_primitive_execution
 
 
 class Primitive(AbstractObject):
-    _immutable_fields_ = ["_invoke", "_is_empty", "_signature", "_holder",
-                          "_universe"]
+    _immutable_fields_ = ["_prim_fun", "_is_empty", "_signature",
+                          "_holder", "_universe"]
         
-    def __init__(self, signature_string, universe, invokable_un,
-                 is_empty = False):
+    def __init__(self, signature_string, universe, prim_fun,
+                 is_empty = False, is_unenforced = False):
         AbstractObject.__init__(self)
         
         self._signature = universe.symbol_for(signature_string)
 
-        self._invokable_unenforced = invokable_un
+        self._prim_fun  = prim_fun
         self._is_empty  = is_empty
         self._holder    = None
         self._universe  = universe
@@ -27,7 +27,7 @@ class Primitive(AbstractObject):
         self.invoke_enforced(rcvr, args, executing_domain)
 
     def invoke_unenforced(self, rcvr, args, executing_domain):
-        inv = self._invokable_unenforced
+        inv = self._prim_fun
         return inv(self, rcvr, args, executing_domain)
 
     def invoke_unenforced_void(self, rcvr, args, executing_domain):
