@@ -16,12 +16,16 @@ class Primitive(AbstractObject):
         self._is_empty  = is_empty
         self._holder    = None
         self._universe  = universe
+        self._is_unenforced = False
 
     def get_universe(self):
         return self._universe
 
     def invoke_enforced(self, rcvr, args, executing_domain):
-        return request_primitive_execution(self, rcvr, args, executing_domain)
+        if self._is_unenforced:
+            return self.invoke_unenforced(rcvr, args, executing_domain)
+        else:
+            return request_primitive_execution(self, rcvr, args, executing_domain)
 
     def invoke_enforced_void(self, rcvr, args, executing_domain):
         self.invoke_enforced(rcvr, args, executing_domain)
@@ -64,15 +68,21 @@ class Primitive(AbstractObject):
     def set_domain(self, domain):
         pass
 
+    def is_unenforced(self):
+        return self._is_unenforced
+
+    def set_unenforced(self):
+        self._is_unenforced = True
+
     def has_domain(self):
         """ Primitive is a primitive type. Its objects are immutable and not owned
             by any particular domain. """
         return False
 
 
-def empty_primitive(signature_string, universe):
+def empty_primitive(signature_string, universe, is_unenforced):
     """ Return an empty primitive with the given signature """
-    return Primitive(signature_string, universe, _invoke, True)
+    return Primitive(signature_string, universe, _invoke, True, is_unenforced)
 
 
 def _invoke(ivkbl, rcvr, args, domain):

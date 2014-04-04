@@ -113,6 +113,9 @@ class Class(Object):
   
             # Replace the invokable with the given one if the signature matches
             if invokable.get_signature() == value.get_signature():
+                if invokable.is_primitive() and value.is_primitive():
+                    if invokable.is_unenforced():
+                        value.set_unenforced()
                 self.set_instance_invokable(i, value)
                 return False
   
