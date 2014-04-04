@@ -1,5 +1,6 @@
 from .expression_node import ExpressionNode
 from som.vmobjects.abstract_object import AbstractObject
+from som.vmobjects.domain import request_execution_of
 
 from .specialized.if_true_false import IfTrueIfFalseNode, IfNode
 from .specialized.to_do_node    import IntToIntDoNode, IntToDoubleDoNode
@@ -142,14 +143,10 @@ class GenericMessageNodeEnforced(AbstractGenericMessageNode):
                 frame.get_executing_domain())
 
     def execute_evaluated(self, frame, rcvr, args):
-        method = self._lookup_method(rcvr)
-        if method:
-            return method.invoke_enforced(rcvr, args,
-                                          frame.get_executing_domain())
-        else:
-            return rcvr.send_does_not_understand_enforced(
-                self._selector, args, self._universe,
-                frame.get_executing_domain())
+        return request_execution_of(self._selector, rcvr, args,
+                                    self._class_of_receiver(rcvr),
+                                    self._universe,
+                                    frame.get_executing_domain())
 
 
 class GenericMessageNodeUnenforced(AbstractGenericMessageNode):

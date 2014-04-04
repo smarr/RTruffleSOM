@@ -21,7 +21,7 @@ class Primitive(AbstractObject):
         return self._universe
 
     def invoke_enforced(self, rcvr, args, executing_domain):
-        return request_primitive_execution(executing_domain, self, rcvr, args)
+        return request_primitive_execution(self, rcvr, args, executing_domain)
 
     def invoke_enforced_void(self, rcvr, args, executing_domain):
         self.invoke_enforced(rcvr, args, executing_domain)

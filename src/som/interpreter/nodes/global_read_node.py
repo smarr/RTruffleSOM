@@ -24,8 +24,8 @@ class UninitializedGlobalReadNodeEnforced(AbstractUninitializedGlobalReadNode):
 
     def execute(self, frame):
         ## TODO: add optimizations...
-        return read_global(frame.get_executing_domain(), self._global_name,
-                           self._universe)
+        return read_global(self._global_name, self._universe,
+                           frame.get_executing_domain())
 
     def execute_void(self, frame):
         self.execute(frame)
