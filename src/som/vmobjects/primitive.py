@@ -16,7 +16,7 @@ class Primitive(AbstractObject):
         self._is_empty  = is_empty
         self._holder    = None
         self._universe  = universe
-        self._is_unenforced = False
+        self._is_unenforced = is_unenforced
 
     def get_universe(self):
         return self._universe
