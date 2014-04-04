@@ -2,10 +2,21 @@ from som.vmobjects.abstract_object import AbstractObject
 from som.vmobjects.object import Object
 
 
+def create_standard_domain(nilObject):
+    domain = Object(nilObject, nilObject, None)
+    domain.set_domain(domain)
+    set_domain_for_new_objects(domain, domain)
+    return domain
+
+
 def get_domain_for_new_objects(domain):
     assert isinstance(domain, Object)
     return domain._field1
 
+def set_domain_for_new_objects(domain, a_domain):
+    assert isinstance(domain,   Object)
+    assert isinstance(a_domain, Object)
+    domain._field1 = a_domain
 
 def request_primitive_execution(domain, prim, rcvr, args):
     universe = prim.get_universe()

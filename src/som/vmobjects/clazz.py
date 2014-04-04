@@ -12,8 +12,8 @@ class Class(Object):
     
     def __init__(self, universe, number_of_fields = -1, obj_class = None,
                  domain = None):
-        Object.__init__(self, universe.nilObject, number_of_fields, obj_class,
-                        domain)
+        Object.__init__(self, universe.nilObject, domain, obj_class,
+                        number_of_fields)
         self._super_class = universe.nilObject
         self._name        = None
         self._instance_fields = None

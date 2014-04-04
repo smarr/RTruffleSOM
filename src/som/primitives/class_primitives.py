@@ -1,10 +1,12 @@
 from som.primitives.primitives import Primitives
+from som.vmobjects.domain import get_domain_for_new_objects
 
 from som.vmobjects.primitive   import Primitive
 
 
 def _new(ivkbl, rcvr, args, domain):
-    return ivkbl.get_universe().new_instance(rcvr)
+    return ivkbl.get_universe().new_instance(rcvr,
+                                             get_domain_for_new_objects(domain))
 
 
 def _name(ivkbl, rcvr, args, domain):

@@ -2,6 +2,7 @@ from rpython.rlib.rrandom import Random
 from rpython.rlib import jit
 
 from som.vm.symbol_table         import SymbolTable
+from som.vmobjects.domain import create_standard_domain
 from som.vmobjects.object        import Object
 from som.vmobjects.clazz         import Class
 from som.vmobjects.array         import Array
@@ -195,10 +196,10 @@ class Universe(object):
         self.exit(0)
 
     def _initialize_object_system(self):
-        # Allocate the nil object
-        self.nilObject = Object(None)
-        self.standardDomain = Object(self.nilObject, 1, None, self.nilObject)
-        self.standardDomain.set_domain(self.standardDomain)
+        # Allocate the nil object and standard domain, and set them up properly
+        self.nilObject = Object(None, None, None)
+        self.standardDomain = create_standard_domain(self.nilObject)
+        self.nilObject.set_domain(self.standardDomain)
 
         # Allocate the Metaclass classes
         self.metaclassClass = self.new_metaclass_class(self.standardDomain)
@@ -257,15 +258,15 @@ class Universe(object):
         # Setup the true and false objects
         trueClassName    = self.symbol_for("True")
         trueClass        = self.load_class(trueClassName)
-        self.trueObject  = self.new_instance(trueClass)
+        self.trueObject  = self.new_instance(trueClass, self.standardDomain)
         
         falseClassName   = self.symbol_for("False")
         falseClass       = self.load_class(falseClassName)
-        self.falseObject = self.new_instance(falseClass)
+        self.falseObject = self.new_instance(falseClass, self.standardDomain)
 
         # Load the system class and create an instance of it
         self.systemClass = self.load_class(self.symbol_for("System"))
-        system_object = self.new_instance(self.systemClass)
+        system_object = self.new_instance(self.systemClass, self.standardDomain)
 
         # Put special objects and classes into the dictionary of globals
         self.set_global(self.symbol_for("nil"),    self.nilObject)
@@ -331,8 +332,9 @@ class Universe(object):
         return Method(signature, invokable, is_primitive, embedded_block_method,
                       self)
 
-    def new_instance(self, instance_class):
-        return Object(self.nilObject, instance_class.get_number_of_instance_fields(), instance_class)
+    def new_instance(self, instance_class, domain):
+        return Object(self.nilObject, domain, instance_class,
+                      instance_class.get_number_of_instance_fields())
 
     @staticmethod
     def new_integer(value):

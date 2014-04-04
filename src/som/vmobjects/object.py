@@ -14,8 +14,7 @@ class Object(AbstractObject):
 
     NUMBER_OF_DIRECT_FIELDS = 5
 
-    def __init__(self, nilObject, number_of_fields = -1, obj_class = None,
-                 domain = None):
+    def __init__(self, nilObject, domain, obj_class, number_of_fields = -1):
         num_fields = (number_of_fields if number_of_fields != -1
                       else self.NUMBER_OF_OBJECT_FIELDS)
         

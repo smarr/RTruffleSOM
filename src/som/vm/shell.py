@@ -37,15 +37,16 @@ class Shell(object):
                 # If success
                 if my_class:
                     # Create and push a new instance of our class on the stack
-                    my_object = self._universe.new_instance(my_class)
+                    my_object = self._universe.new_instance(
+                        my_class, self._universe.standardDomain)
 
                     # Lookup the run: method
                     initialize = my_class.lookup_invokable(
                         self._universe.symbol_for("run:"))
 
                     # Invoke the run method
-                    it = initialize.invoke_unenforced(my_object, [it],
-                                                      self._universe.standardDomain)
+                    it = initialize.invoke_unenforced(
+                        my_object, [it], self._universe.standardDomain)
             except Exception as e:
                 if not we_are_translated():  # this cannot be done in rpython
                     import traceback
