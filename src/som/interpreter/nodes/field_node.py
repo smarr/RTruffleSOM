@@ -105,7 +105,8 @@ class _AbstractUnenforcedFieldWriteNode(_AbstractFieldWriteNode):
 def _make_field_write_node_class(field_idx):
     class _UnenforcedFieldWriteNodeI(_AbstractUnenforcedFieldWriteNode):
         def write(self, frame, self_obj, value):
-            return setattr(self_obj, "_field" + str(field_idx), value)
+            setattr(self_obj, "_field" + str(field_idx), value)
+            return value
     return _UnenforcedFieldWriteNodeI
 
 
