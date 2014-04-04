@@ -79,6 +79,10 @@ class Primitive(AbstractObject):
             by any particular domain. """
         return False
 
+    def __str__(self):
+        return ("Primitive(" + self.get_holder().get_name().get_string() + ">>"
+                + str(self.get_signature()) + ")")
+
 
 def empty_primitive(signature_string, universe, is_unenforced):
     """ Return an empty primitive with the given signature """
