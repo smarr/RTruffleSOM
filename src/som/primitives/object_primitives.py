@@ -87,7 +87,40 @@ def _halt(ivkbl, rcvr, args, domain):
 
 def _class(ivkbl, rcvr, args, domain):
     return rcvr.get_class(ivkbl.get_universe())
-    
+
+
+def _performEnforced(ivkbl, rcvr, args, domain):
+    selector = args[0]
+    invokable = rcvr.get_class(ivkbl.get_universe()).lookup_invokable(selector)
+    return invokable.invoke_enforced(rcvr, None, domain)
+
+
+def _performEnforcedWithArgs(ivkbl, rcvr, args, domain):
+    arg_arr  = args[1].get_indexable_fields()
+    selector = args[0]
+
+    invokable = rcvr.get_class(ivkbl.get_universe()).lookup_invokable(selector)
+    return invokable.invoke_enforced(rcvr, arg_arr, domain)
+
+
+def _performEnforcedInSuperclass(ivkbl, rcvr, args, domain):
+    clazz    = args[1]
+    selector = args[0]
+
+    invokable = clazz.lookup_invokable(selector)
+    return invokable.invoke_enforced(rcvr, None, domain)
+
+
+def _performEnforcedWithArgsInSuperclass(ivkbl, rcvr, args, domain):
+    clazz    = args[2]
+    if args[1] is ivkbl.get_universe().nilObject:
+        arg_arr = None
+    else:
+        arg_arr  = args[1].get_indexable_fields()
+    selector = args[0]
+
+    invokable = clazz.lookup_invokable(selector)
+    return invokable.invoke_enforced(rcvr, arg_arr, domain)
 
 
 class ObjectPrimitives(Primitives):
@@ -102,7 +135,12 @@ class ObjectPrimitives(Primitives):
         self._install_instance_primitive(Primitive("instVarAt:", self._universe, _instVarAt))
         self._install_instance_primitive(Primitive("instVarAt:put:", self._universe, _instVarAtPut))
         self._install_instance_primitive(Primitive("instVarNamed:",  self._universe, _instVarNamed))
-        
-        self._install_instance_primitive(Primitive("halt", self._universe, _halt))
-        self._install_instance_primitive(Primitive("class", self._universe, _class))
 
+        # OMOP
+        self._install_instance_primitive(Primitive("performEnforced:",                            self._universe, _performEnforced))
+        self._install_instance_primitive(Primitive("performEnforced:withArguments:",              self._universe, _performEnforcedWithArgs))
+        self._install_instance_primitive(Primitive("performEnforced:inSuperclass:",               self._universe, _performEnforcedInSuperclass))
+        self._install_instance_primitive(Primitive("performEnforced:withArguments:inSuperclass:", self._universe, _performEnforcedWithArgsInSuperclass))
+
+        self._install_instance_primitive(Primitive("halt",  self._universe, _halt))
+        self._install_instance_primitive(Primitive("class", self._universe, _class))
