@@ -58,7 +58,7 @@ class Invokable(Node):
                                   arguments=arguments, executing_domain=executing_domain,
                                   enforced=enforced, do_void=do_void)
         frame = Frame(receiver, arguments, self._number_of_temps,
-                      self._universe.nilObject, executing_domain, enforced)
+                      self._universe.nilObject, executing_domain)
         if enforced:
             if do_void:
                 self._body_enforced.execute_void(frame)
