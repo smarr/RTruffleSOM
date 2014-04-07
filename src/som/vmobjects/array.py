@@ -5,11 +5,14 @@ class Array(AbstractObject):
 
     _immutable_fields_ = ["_indexable_fields"]
     
-    def __init__(self, nilObject, number_of_indexable_fields, domain):
+    def __init__(self, nilObject, number_of_indexable_fields, domain, values = None):
         AbstractObject.__init__(self)
 
         # Private array of indexable fields
-        self._indexable_fields = [nilObject] * number_of_indexable_fields
+        if values is None:
+            self._indexable_fields = [nilObject] * number_of_indexable_fields
+        else:
+            self._indexable_fields = values
         self._domain = domain
         
     def get_indexable_field(self, index):

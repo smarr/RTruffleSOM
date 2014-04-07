@@ -300,15 +300,8 @@ class Universe(object):
         return Array(self.nilObject, length, domain)
   
     def new_array_from_list(self, values, domain):
-        # Allocate a new array with the same length as the list
-        result = self.new_array_with_length(len(values), domain)
+        return Array(self.nilObject, 0, domain, values)
 
-        # Copy all elements from the list into the array
-        for i in range(len(values)):
-            result.set_indexable_field(i, values[i])
-
-        return result
-  
     def new_array_with_strings(self, strings, domain):
         # Allocate a new array with the same length as the string array
         result = self.new_array_with_length(len(strings), domain)
