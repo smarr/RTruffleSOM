@@ -46,6 +46,17 @@ def request_execution_of(selector, rcvr, args, lookup_class, universe,
                                        universe, executing_domain)
 
 
+def request_execution_of_void(selector, rcvr, args, lookup_class, universe,
+                              executing_domain):
+    rcvr_domain = rcvr.get_domain(universe)
+    som_args    = _arg_array_to_som_array(args, rcvr_domain, universe)
+    return rcvr_domain.send_unenforced_void("requestExecutionOf:with:on:lookup:",
+                                            [selector, som_args, rcvr,
+                                             lookup_class],
+                                            universe, executing_domain)
+
+
+
 def read_global(symbol, universe, executing_domain):
     return executing_domain.send_unenforced("readGlobal:", [symbol], universe,
                                             executing_domain)

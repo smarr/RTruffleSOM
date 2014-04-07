@@ -1,6 +1,6 @@
 from .expression_node import ExpressionNode
 from som.vmobjects.abstract_object import AbstractObject
-from som.vmobjects.domain import request_execution_of
+from som.vmobjects.domain import request_execution_of, request_execution_of_void
 
 from .specialized.if_true_false import IfTrueIfFalseNode, IfNode
 from .specialized.to_do_node    import IntToIntDoNode, IntToDoubleDoNode
@@ -133,14 +133,10 @@ class GenericMessageNodeEnforced(AbstractGenericMessageNode):
                                             arg_exprs, True, source_section)
 
     def execute_evaluated_void(self, frame, rcvr, args):
-        method = self._lookup_method(rcvr)
-        if method:
-            method.invoke_enforced_void(rcvr, args,
-                                        frame.get_executing_domain())
-        else:
-            rcvr.send_does_not_understand_enforced_void(
-                self._selector, args, self._universe,
-                frame.get_executing_domain())
+        return request_execution_of_void(self._selector, rcvr, args,
+                                         self._class_of_receiver(rcvr),
+                                         self._universe,
+                                         frame.get_executing_domain())
 
     def execute_evaluated(self, frame, rcvr, args):
         return request_execution_of(self._selector, rcvr, args,
