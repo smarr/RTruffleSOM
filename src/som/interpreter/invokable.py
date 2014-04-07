@@ -2,7 +2,6 @@ from rpython.rlib import jit
 
 from .frame import Frame
 from rtruffle.node import Node
-from som.interpreter.nodes.som_node import SOMNode
 
 
 def get_printable_location(invokable, executing_domain):
@@ -12,7 +11,7 @@ jitdriver = jit.JitDriver(
      greens=['self', 'executing_domain'],
      # virtualizables=['caller_frame'])
       get_printable_location=get_printable_location,
-     reds= ['do_void', 'enforced', 'arguments', 'receiver', 'frame'],
+     reds= ['do_void', 'enforced', 'arguments', 'receiver'], #, 'frame'
 
      # the next line is a workaround around a likely bug in RPython
      # for some reason, the inlining heuristics default to "never inline" when
@@ -55,16 +54,11 @@ class Invokable(Node):
 
     def _do_invoke(self, receiver, arguments, executing_domain,
                    do_void, enforced):
+        jitdriver.jit_merge_point(self=self, receiver=receiver, # frame=frame,
+                                  arguments=arguments, executing_domain=executing_domain,
+                                  enforced=enforced, do_void=do_void)
         frame = Frame(receiver, arguments, self._number_of_temps,
-                      self._universe.nilObject, executing_domain)
-        jitdriver.jit_merge_point(self      = self,
-                                  receiver  = receiver,
-                                  arguments = arguments,
-                                  frame     = frame,
-                                  executing_domain = executing_domain,
-                                  enforced = enforced,
-                                  do_void = do_void)
-        
+                      self._universe.nilObject, executing_domain, enforced)
         if enforced:
             if do_void:
                 self._body_enforced.execute_void(frame)
