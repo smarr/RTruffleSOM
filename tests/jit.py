@@ -28,7 +28,7 @@ class TestLLtype(LLJitMixin):
         u.setup_classpath(classpath)
         u._initialize_object_system()
         cls = sourcecode_compiler.compile_class_from_string(source, None, u)
-        obj = u.new_instance(cls)
+        obj = u.new_instance(cls, u.standardDomain)
         invokable = cls.lookup_invokable(u.symbol_for(start))
         return u, obj, invokable
 
@@ -39,7 +39,7 @@ class TestLLtype(LLJitMixin):
 
         def interp_w():
             try:
-                invokable.invoke(rcvr, None)
+                invokable.invoke_unenforced(rcvr, None, universe.standardDomain)
             except Exit as e:
                 return e.code
             return -1
@@ -87,6 +87,17 @@ class TestLLtype(LLJitMixin):
             Dispatch = (
                 method: n = ( ^ n )
                 run = ( 1 to: 20000 do: [:i | self method: i ] ) )
+            """, "run")
+
+    def test_dispatch_enforced(self):
+        self._run_meta_interp("""
+            Dispatch = (
+                method: n = ( ^ n )
+                run = (
+                 Mirror evaluate: [
+                    1 to: 20000 do: [ :i | self method: i ]
+                 ] enforcedIn: Domain new.
+                ) )
             """, "run")
 
     def test_whileloop(self):
