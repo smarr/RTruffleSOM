@@ -20,7 +20,7 @@ def set_domain_for_new_objects(domain, a_domain):
     domain._field1 = a_domain
 
 
-def _arg_array_to_som_array(args, domain, universe):
+def arg_array_to_som_array(args, domain, universe):
     if args is None:
         som_args = universe.nilObject
     else:
@@ -31,7 +31,7 @@ def _arg_array_to_som_array(args, domain, universe):
 def request_primitive_execution(prim, rcvr, args, executing_domain):
     universe = prim.get_universe()
     rcvr_domain = rcvr.get_domain(universe)
-    som_args = _arg_array_to_som_array(args, rcvr_domain, universe)
+    som_args = arg_array_to_som_array(args, rcvr_domain, universe)
     return rcvr_domain.send_unenforced("requestExecutionOfPrimitive:with:on:",
                                        [prim, som_args, rcvr], universe,
                                        executing_domain)
@@ -40,7 +40,7 @@ def request_primitive_execution(prim, rcvr, args, executing_domain):
 def request_execution_of(selector, rcvr, args, lookup_class, universe,
                          executing_domain):
     rcvr_domain = rcvr.get_domain(universe)
-    som_args    = _arg_array_to_som_array(args, rcvr_domain, universe)
+    som_args    = arg_array_to_som_array(args, rcvr_domain, universe)
     return rcvr_domain.send_unenforced("requestExecutionOf:with:on:lookup:",
                                        [selector, som_args, rcvr, lookup_class],
                                        universe, executing_domain)
@@ -49,7 +49,7 @@ def request_execution_of(selector, rcvr, args, lookup_class, universe,
 def request_execution_of_void(selector, rcvr, args, lookup_class, universe,
                               executing_domain):
     rcvr_domain = rcvr.get_domain(universe)
-    som_args    = _arg_array_to_som_array(args, rcvr_domain, universe)
+    som_args    = arg_array_to_som_array(args, rcvr_domain, universe)
     return rcvr_domain.send_unenforced_void("requestExecutionOf:with:on:lookup:",
                                             [selector, som_args, rcvr,
                                              lookup_class],

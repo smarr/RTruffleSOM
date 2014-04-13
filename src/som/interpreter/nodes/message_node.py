@@ -1,6 +1,5 @@
 from .expression_node import ExpressionNode
 from som.vmobjects.abstract_object import AbstractObject
-from som.vmobjects.domain import request_execution_of, request_execution_of_void
 
 from .specialized.if_true_false import IfTrueIfFalseNode, IfNode
 from .specialized.to_do_node    import IntToIntDoNode, IntToDoubleDoNode
@@ -8,10 +7,6 @@ from .specialized.to_by_do_node import IntToIntByDoNode, IntToDoubleByDoNode
 from .specialized.while_node    import WhileMessageNode
 
 from rpython.rlib.jit import unroll_safe
-
-from ...vmobjects.block   import Block
-from ...vmobjects.double  import Double
-from ...vmobjects.integer import Integer
 
 
 class AbstractMessageNode(ExpressionNode):
@@ -48,31 +43,6 @@ class AbstractUninitializedMessageNode(AbstractMessageNode):
     def execute_void(self, frame):
         rcvr, args = self._evaluate_rcvr_and_args(frame)
         self._specialize(rcvr, args).execute_evaluated_void(frame, rcvr, args)
-
-
-class UninitializedMessageNodeEnforced(AbstractUninitializedMessageNode):
-
-    def __init__(self, selector, universe, rcvr_expr, arg_exprs,
-                 source_section = None):
-        AbstractUninitializedMessageNode.__init__(self, selector, universe,
-                                                  rcvr_expr, arg_exprs,
-                                                  True, source_section)
-
-    def _specialize(self, rcvr, args):
-        if args:
-            for specialization in [WhileMessageNode,
-                                   IntToIntDoNode,   IntToDoubleDoNode,
-                                   IntToIntByDoNode, IntToDoubleByDoNode,
-                                   IfTrueIfFalseNode,
-                                   IfNode]:
-                if specialization.can_specialize(self._selector, rcvr, args,
-                                                 self):
-                    return specialization.specialize_node(self._selector, rcvr,
-                                                          args, self)
-        return self.replace(
-            GenericMessageNodeEnforced(self._selector, self._universe,
-                                       self._rcvr_expr, self._arg_exprs,
-                                       self._source_section))
 
 
 class UninitializedMessageNodeUnenforced(AbstractUninitializedMessageNode):
@@ -123,26 +93,6 @@ class AbstractGenericMessageNode(AbstractMessageNode):
         return "%s(%s, %s)" % (self.__class__.__name__,
                                self._selector,
                                self._source_section)
-
-
-class GenericMessageNodeEnforced(AbstractGenericMessageNode):
-
-    def __init__(self, selector, universe, rcvr_expr, arg_exprs,
-                 source_section = None):
-        AbstractGenericMessageNode.__init__(self, selector, universe, rcvr_expr,
-                                            arg_exprs, True, source_section)
-
-    def execute_evaluated_void(self, frame, rcvr, args):
-        return request_execution_of_void(self._selector, rcvr, args,
-                                         self._class_of_receiver(rcvr),
-                                         self._universe,
-                                         frame.get_executing_domain())
-
-    def execute_evaluated(self, frame, rcvr, args):
-        return request_execution_of(self._selector, rcvr, args,
-                                    self._class_of_receiver(rcvr),
-                                    self._universe,
-                                    frame.get_executing_domain())
 
 
 class GenericMessageNodeUnenforced(AbstractGenericMessageNode):

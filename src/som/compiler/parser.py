@@ -5,12 +5,14 @@ from ..interpreter.nodes.global_read_node import \
     UninitializedGlobalReadNodeEnforced, UninitializedGlobalReadNodeUnenforced
 from ..interpreter.nodes.literal_node     import LiteralNode
 from ..interpreter.nodes.message_node     import \
-    UninitializedMessageNodeEnforced, UninitializedMessageNodeUnenforced
+    UninitializedMessageNodeUnenforced
 from ..interpreter.nodes.return_non_local_node import ReturnNonLocalNode
 from ..interpreter.nodes.sequence_node    import SequenceNode
 
 from .lexer                     import Lexer
 from .method_generation_context import MethodGenerationContext
+from som.interpreter.nodes.enforced.message_node_enforced import \
+    UninitializedMessageNodeEnforced
 from .symbol                    import Symbol, symbol_as_str
 
 from ..vmobjects.integer import integer_value_fits
