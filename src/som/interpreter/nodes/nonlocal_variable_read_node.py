@@ -11,6 +11,7 @@ class NonLocalVariableNode(ContextualNode):
                  executes_enforced, source_section):
         ContextualNode.__init__(self, context_level, executes_enforced,
                                 source_section)
+        assert frame_idx >= 0
         self._is_argument   = is_argument
         self._frame_idx     = frame_idx
 
