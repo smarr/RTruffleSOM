@@ -25,7 +25,7 @@ def _resend_as_biginteger(operator, left, right, universe, domain):
 
 
 def _resend_as_double(operator, left, right, universe, domain):
-    left_double = universe.new_double(left.get_embedded_integer())
+    left_double = universe.new_double(float(left.get_embedded_integer()))
     operands    = [right]
     ## REM: we do here unenforced resends, because we know that
     ##      the receiver is a safe value object, and the operation is harmless
