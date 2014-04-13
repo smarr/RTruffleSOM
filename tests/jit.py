@@ -90,15 +90,56 @@ class TestLLtype(LLJitMixin):
             """, "run")
 
     def test_dispatch_enforced(self):
+        cp = (py.path.local(__file__).dirpath().dirpath().join(
+                "Smalltalk").strpath + ":" +
+              py.path.local(__file__).dirpath().dirpath().join(
+                "Examples/Benchmarks/OMOP").strpath)
         self._run_meta_interp("""
             Dispatch = (
                 method: n = ( ^ n )
                 run = (
+                 | domain |
+                 domain := DummyDomain new.
+                 domain adoptObject: self.
                  Mirror evaluate: [
                     1 to: 20000 do: [ :i | self method: i ]
-                 ] enforcedIn: Domain new.
+                 ] enforcedIn: domain.
                 ) )
-            """, "run")
+            """, "run", cp)
+
+    def test_adddispatchenforced(self):
+        cp = (py.path.local(__file__).dirpath().dirpath().join(
+            "Smalltalk").strpath + ":" +
+              py.path.local(__file__).dirpath().dirpath().join(
+                  "Examples/Benchmarks/OMOP").strpath)
+        self._run_meta_interp("""
+            Enforced = (
+                method: n = ( ^ n )
+                run = (
+                 | domain sum |
+                 sum := 0.
+                 domain := AddDomain new.
+                 domain adoptObject: self.
+                 Mirror evaluate: [
+                    1 to: 20000 do: [ :i | sum := sum + (self method: i) ]
+                 ] enforcedIn: domain.
+                ) )
+            """, "run", cp)
+
+    def test_adddispatchunenforced(self):
+        cp = (py.path.local(__file__).dirpath().dirpath().join(
+            "Smalltalk").strpath + ":" +
+              py.path.local(__file__).dirpath().dirpath().join(
+                  "Examples/Benchmarks/OMOP").strpath)
+        self._run_meta_interp("""
+            Unenforced = (
+                method: n = ( ^ n )
+                runUnenforced = (
+                 | sum |
+                 sum := 0.
+                 1 to: 20000 do: [ :i | sum := sum + 1 + (self method: i) ].
+                ) )
+            """, "runUnenforced", cp)
 
     def test_whileloop(self):
         self._run_meta_interp("""
