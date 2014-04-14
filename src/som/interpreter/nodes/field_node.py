@@ -5,7 +5,7 @@ from som.vmobjects.domain import read_field_of, write_to_field_of
 from som.vmobjects.object          import Object
 
 
-class _AbstractFieldNode(ExpressionNode):
+class AbstractFieldNode(ExpressionNode):
 
     _immutable_fields_ = ["_self_exp?"]
     _child_nodes_      = ["_self_exp"]
@@ -15,10 +15,10 @@ class _AbstractFieldNode(ExpressionNode):
         self._self_exp  = self.adopt_child(self_exp)
 
 
-class _AbstractUnenforcedFieldReadNode(_AbstractFieldNode):
+class _AbstractUnenforcedFieldReadNode(AbstractFieldNode):
 
     def __init__(self, self_exp, source_section = None):
-        _AbstractFieldNode.__init__(self, self_exp, False, source_section)
+        AbstractFieldNode.__init__(self, self_exp, False, source_section)
 
     def execute(self, frame):
         self_obj = self._self_exp.execute(frame)
@@ -54,33 +54,13 @@ class UnenforcedFieldReadNodeN(_AbstractUnenforcedFieldReadNode):
         return self_obj._fields[self._extension_index]
 
 
-class EnforcedFieldReadNode(_AbstractFieldNode):
-
-    _immutable_fields_ = ["_field_idx", "_universe"]
-
-    ## TODO: consider using the field name instead of the index, to make it nicer...
-
-    def __init__(self, self_exp, field_idx, universe, source_section = None):
-        _AbstractFieldNode.__init__(self, self_exp, True, source_section)
-        self._field_idx = field_idx ## TODO: should probably convert it already into an SOM Integer
-        self._universe  = universe
-
-    def execute(self, frame):
-        self_obj = self._self_exp.execute(frame)
-        return read_field_of(self._field_idx, self_obj, self._universe,
-                             frame.get_executing_domain())
-
-    def execute_void(self, frame):
-        self.execute(frame)
-
-
-class _AbstractFieldWriteNode(_AbstractFieldNode):
+class AbstractFieldWriteNode(AbstractFieldNode):
 
     _immutable_fields_ = ["_value_exp?"]
     _child_nodes_      = ["_value_exp"]
 
     def __init__(self, self_exp, value_exp, executes_enforced, source_section = None):
-        _AbstractFieldNode.__init__(self, self_exp, executes_enforced, source_section)
+        AbstractFieldNode.__init__(self, self_exp, executes_enforced, source_section)
         self._value_exp = self.adopt_child(value_exp)
 
     def execute(self, frame):
@@ -95,10 +75,10 @@ class _AbstractFieldWriteNode(_AbstractFieldNode):
         self.execute(frame)
 
 
-class _AbstractUnenforcedFieldWriteNode(_AbstractFieldWriteNode):
+class _AbstractUnenforcedFieldWriteNode(AbstractFieldWriteNode):
 
     def __init__(self, self_exp, value_exp, source_section = None):
-        _AbstractFieldWriteNode.__init__(self, self_exp, value_exp,
+        AbstractFieldWriteNode.__init__(self, self_exp, value_exp,
                                          False, source_section)
 
 
@@ -128,38 +108,13 @@ class UnenforcedFieldWriteNodeN(_AbstractUnenforcedFieldWriteNode):
         self_obj._fields[self._extension_index] = value
 
 
-class EnforcedFieldWriteNode(_AbstractFieldWriteNode):
-
-    _immutable_fields_ = ["_field_idx", "_universe"]
-
-    ## TODO: consider using the field name instead of the index, to make it nicer...
-
-    def __init__(self, self_exp, field_idx, value_exp, universe, source_section = None):
-        _AbstractFieldWriteNode.__init__(self, self_exp, value_exp, True, source_section)
-        self._field_idx = field_idx ## TODO: should probably convert it already into an SOM Integer
-        self._universe  = universe
-
-    def write(self, frame, self_obj, value):
-        return write_to_field_of(value, self._field_idx, self_obj,
-                                 self._universe, frame.get_executing_domain())
-
 _field_read_node_classes  = _make_field_read_node_classes(Object.NUMBER_OF_DIRECT_FIELDS)
 _field_write_node_classes = _make_field_write_node_classes(Object.NUMBER_OF_DIRECT_FIELDS)
 
 
-def create_read_node(self_exp_en, self_exp_un, index, universe):
-    if index < Object.NUMBER_OF_DIRECT_FIELDS:
-        return EnforcedFieldReadNode(self_exp_en, index, universe),\
-               _field_read_node_classes[index](self_exp_un)
-    else:
-        return EnforcedFieldReadNode(self_exp_en, index, universe),\
-               UnenforcedFieldReadNodeN(self_exp_un, index - Object.NUMBER_OF_DIRECT_FIELDS)
+def get_read_node_class(field_idx):
+    return _field_read_node_classes[field_idx]
 
 
-def create_write_node(self_en, self_un, index, value_en, value_un, universe):
-    if index < Object.NUMBER_OF_DIRECT_FIELDS:
-        return EnforcedFieldWriteNode(self_en, index, value_en, universe), \
-               _field_write_node_classes[index](self_un, value_un)
-    else:
-        return EnforcedFieldWriteNode(self_en, index, value_en, universe), \
-               UnenforcedFieldWriteNodeN(self_un, value_un, index - Object.NUMBER_OF_DIRECT_FIELDS)
+def get_write_node_class(field_idx):
+    return _field_write_node_classes[field_idx]
