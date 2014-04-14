@@ -1,7 +1,6 @@
 from rpython.rlib.rrandom import Random
 from rpython.rlib import jit
 
-from som.vm.symbol_table         import SymbolTable
 from som.vmobjects.domain import create_standard_domain
 from som.vmobjects.object        import Object
 from som.vmobjects.clazz         import Class
@@ -73,8 +72,7 @@ class Universe(object):
             "domainClass"]
 
     def __init__(self, avoid_exit = False):
-        self._symbol_table   = SymbolTable()
-        
+        self._symbol_table   = {}
         self._globals        = {}
 
         self.nilObject      = None
@@ -303,15 +301,16 @@ class Universe(object):
                 [self._make_block_class(i) for i in [1, 2, 3]]
 
         return system_object
-    
+
+    @jit.elidable
     def symbol_for(self, string):
         # Lookup the symbol in the symbol table
-        result = self._symbol_table.lookup(string)
-        if result:
+        result = self._symbol_table.get(string, None)
+        if result is not None:
             return result
         
         # Create a new symbol and return it
-        result = self.new_symbol(string)
+        result = self._new_symbol(string)
         return result
     
     def new_array_with_length(self, length, domain):
@@ -372,11 +371,11 @@ class Universe(object):
     def new_string(embedded_string):
         return String(embedded_string)
 
-    def new_symbol(self, string):
+    def _new_symbol(self, string):
         result = Symbol(string)
 
         # Insert the new symbol into the symbol table
-        self._symbol_table.insert(result)
+        self._symbol_table[string] = result
         return result
       
     def new_system_class(self, domain):
