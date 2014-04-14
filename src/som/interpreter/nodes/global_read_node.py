@@ -1,5 +1,5 @@
 from .expression_node import ExpressionNode
-from som.vmobjects.domain import read_global
+
 
 
 class AbstractUninitializedGlobalReadNode(ExpressionNode):
@@ -13,22 +13,6 @@ class AbstractUninitializedGlobalReadNode(ExpressionNode):
 
     def execute_void(self, frame):
         pass  # NOOP, because it is side-effect free
-
-
-class UninitializedGlobalReadNodeEnforced(AbstractUninitializedGlobalReadNode):
-
-    def __init__(self, global_name, universe, source_section = None):
-        AbstractUninitializedGlobalReadNode.__init__(self, global_name,
-                                                     universe, True,
-                                                     source_section)
-
-    def execute(self, frame):
-        ## TODO: add optimizations...
-        return read_global(self._global_name, self._universe,
-                           frame.get_executing_domain())
-
-    def execute_void(self, frame):
-        self.execute(frame)
 
 
 class UninitializedGlobalReadNodeUnenforced(AbstractUninitializedGlobalReadNode):

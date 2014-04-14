@@ -1,12 +1,14 @@
 from collections import OrderedDict
 
 from rtruffle.source_section import SourceSection
+from som.interpreter.nodes.enforced.global_read_node import \
+    UninitializedGlobalReadNodeEnforced
 from som.interpreter.nodes.factory import create_read_node, create_write_node
 
 from .variable                                 import Argument, Local
 
 from ..interpreter.nodes.global_read_node      import \
-    UninitializedGlobalReadNodeEnforced, UninitializedGlobalReadNodeUnenforced
+    UninitializedGlobalReadNodeUnenforced
 from ..interpreter.nodes.return_non_local_node import CatchNonLocalReturnNode
 from ..interpreter.invokable                   import Invokable, \
     InvokableUnenforced

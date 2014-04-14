@@ -2,7 +2,7 @@ from rtruffle.source_section import SourceSection
 
 from ..interpreter.nodes.block_node       import BlockNode, BlockNodeWithContext
 from ..interpreter.nodes.global_read_node import \
-    UninitializedGlobalReadNodeEnforced, UninitializedGlobalReadNodeUnenforced
+    UninitializedGlobalReadNodeUnenforced
 from ..interpreter.nodes.literal_node     import LiteralNode
 from ..interpreter.nodes.message_node     import \
     UninitializedMessageNodeUnenforced
@@ -11,6 +11,8 @@ from ..interpreter.nodes.sequence_node    import SequenceNode
 
 from .lexer                     import Lexer
 from .method_generation_context import MethodGenerationContext
+from som.interpreter.nodes.enforced.global_read_node import \
+    UninitializedGlobalReadNodeEnforced
 from som.interpreter.nodes.enforced.message_node_enforced import \
     UninitializedMessageNodeEnforced
 from .symbol                    import Symbol, symbol_as_str
