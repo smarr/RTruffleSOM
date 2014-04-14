@@ -42,6 +42,14 @@ class UninitializedGlobalReadNodeEnforced(_AbstractUninitializedEnforced):
         uninitialized = UninitializedGlobalReadNodeEnforced(
             self._global_name, self._universe, self._source_section)
         domain_class = executing_domain.get_class(self._universe)
+
+        if executing_domain is self._universe.standardDomain:
+            return self.replace(_StandardDomainCached(self._global_name,
+                                                      domain_class,
+                                                      uninitialized,
+                                                      self._universe,
+                                                      self._source_section))
+
         return self.replace(_CachedEnforced(self._global_name, domain_class,
                                             uninitialized, self._universe,
                                             self._source_section))
@@ -73,6 +81,23 @@ class _CachedEnforced(AbstractUninitializedGlobalReadNode):
             executing_domain = frame.get_executing_domain()
             return self._intercession_handler.invoke_unenforced(
                 executing_domain, [self._global_name], executing_domain)
+        else:
+            return self._next_in_cache.execute(frame)
+
+
+class _StandardDomainCached(_CachedEnforced):
+
+    _immutable_fields_ = ['_assoc']
+
+    def __init__(self, global_name, domain_class, next_in_cache, universe,
+                 source_section):
+        _CachedEnforced.__init__(self, global_name, domain_class, next_in_cache,
+                                 universe, source_section)
+        self._assoc = universe.get_globals_association(global_name)
+
+    def execute(self, frame):
+        if self._is_cached_domain(frame):
+            return self._assoc.get_value()
         else:
             return self._next_in_cache.execute(frame)
 
