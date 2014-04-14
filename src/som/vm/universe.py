@@ -68,7 +68,9 @@ class Universe(object):
             "stringClass",
             "doubleClass",
             "_symbol_table",
-            "_globals"]
+            "_globals",
+            "standardDomain",
+            "domainClass"]
 
     def __init__(self, avoid_exit = False):
         self._symbol_table   = SymbolTable()
@@ -94,6 +96,9 @@ class Universe(object):
         self.blockClasses   = None
         self.stringClass    = None
         self.doubleClass    = None
+
+        self.standardDomain = None
+        self.domainClass    = None
         
         self._last_exit_code = 0
         self._avoid_exit     = avoid_exit
