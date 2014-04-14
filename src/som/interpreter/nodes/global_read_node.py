@@ -1,7 +1,6 @@
 from .expression_node import ExpressionNode
 
 
-
 class AbstractUninitializedGlobalReadNode(ExpressionNode):
 
     _immutable_fields_ = ["_global_name", "_universe"]
