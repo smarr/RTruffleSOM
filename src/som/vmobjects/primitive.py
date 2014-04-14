@@ -4,7 +4,7 @@ from som.vmobjects.domain import request_primitive_execution
 
 class Primitive(AbstractObject):
     _immutable_fields_ = ["_prim_fun", "_is_empty", "_signature",
-                          "_holder", "_universe"]
+                          "_holder", "_universe", '_is_unenforced']
         
     def __init__(self, signature_string, universe, prim_fun,
                  is_empty = False, is_unenforced = False):
