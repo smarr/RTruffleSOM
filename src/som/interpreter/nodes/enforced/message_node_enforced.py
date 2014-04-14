@@ -199,21 +199,32 @@ class _CachedDomainHandlerDispatchNode(_CachedDomainDispatchNode):
             return self._super_class
         return rcvr.get_class(self._universe)
 
-    def dispatch_void(self, frame, rcvr, args):
+    def _is_cached_domain(self, rcvr):
         rcvr_domain = rcvr.get_domain(self._universe)
-        som_args = arg_array_to_som_array(args, rcvr_domain, self._universe)
-        self._intersession_handler.invoke_unenforced_void(
-            rcvr_domain, [self._baselevel_selector, som_args, rcvr,
-                          self._get_rcvr_class(rcvr)],
-            frame.get_executing_domain())
+        rcvr_domain_class = rcvr_domain.get_class(self._universe)
+        return rcvr_domain_class is self._domain_class
+
+    def dispatch_void(self, frame, rcvr, args):
+        if self._is_cached_domain(rcvr):
+            rcvr_domain = rcvr.get_domain(self._universe)
+            som_args = arg_array_to_som_array(args, rcvr_domain, self._universe)
+            self._intersession_handler.invoke_unenforced_void(
+                rcvr_domain, [self._baselevel_selector, som_args, rcvr,
+                              self._get_rcvr_class(rcvr)],
+                frame.get_executing_domain())
+        else:
+            self._next_in_cache.dispatch_void(frame, rcvr, args)
 
     def dispatch(self, frame, rcvr, args):
-        rcvr_domain = rcvr.get_domain(self._universe)
-        som_args = arg_array_to_som_array(args, rcvr_domain, self._universe)
-        return self._intersession_handler.invoke_unenforced(
-            rcvr_domain, [self._baselevel_selector, som_args, rcvr,
-                          self._get_rcvr_class(rcvr)],
-            frame.get_executing_domain())
+        if self._is_cached_domain(rcvr):
+            rcvr_domain = rcvr.get_domain(self._universe)
+            som_args = arg_array_to_som_array(args, rcvr_domain, self._universe)
+            return self._intersession_handler.invoke_unenforced(
+                rcvr_domain, [self._baselevel_selector, som_args, rcvr,
+                              self._get_rcvr_class(rcvr)],
+                frame.get_executing_domain())
+        else:
+            return self._next_in_cache.dispatch(frame, rcvr, args)
 
 
 class _GenericDomainDispatchNode(_AbstractDomainDispatchNode):
