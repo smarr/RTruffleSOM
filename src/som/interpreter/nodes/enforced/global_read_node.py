@@ -44,11 +44,11 @@ class UninitializedGlobalReadNodeEnforced(_AbstractUninitializedEnforced):
         domain_class = executing_domain.get_class(self._universe)
 
         if executing_domain is self._universe.standardDomain:
-            return self.replace(_StandardDomainCached(self._global_name,
-                                                      domain_class,
-                                                      uninitialized,
-                                                      self._universe,
-                                                      self._source_section))
+            return self.replace(_StandardDomainUncached(self._global_name,
+                                                        domain_class,
+                                                        uninitialized,
+                                                        self._universe,
+                                                        self._source_section))
 
         return self.replace(_CachedEnforced(self._global_name, domain_class,
                                             uninitialized, self._universe,
@@ -57,8 +57,9 @@ class UninitializedGlobalReadNodeEnforced(_AbstractUninitializedEnforced):
 
 class _CachedEnforced(AbstractUninitializedGlobalReadNode):
 
-    _immutable_fields_ = ['_domain_class', '_next_in_cache',
+    _immutable_fields_ = ['_domain_class', '_next_in_cache?',
                           '_intercession_handler']
+    _child_nodes_      = ['_next_in_cache']
 
     def __init__(self, global_name, domain_class, next_in_cache, universe,
                  source_section):
@@ -66,10 +67,12 @@ class _CachedEnforced(AbstractUninitializedGlobalReadNode):
                                                      universe, True,
                                                      source_section)
         self._domain_class  = domain_class
-        self._next_in_cache = next_in_cache
+        self._next_in_cache = self.adopt_child(next_in_cache)
 
-        selector = universe.symbol_for("readGlobal:")
-        self._intercession_handler = domain_class.lookup_invokable(selector)
+        selector = universe.symbol_for("readGlobal:for:")
+        handler = domain_class.lookup_invokable(selector)
+        assert handler is not None
+        self._intercession_handler = handler
 
     def _is_cached_domain(self, frame):
         executing_domain = frame.get_executing_domain()
@@ -83,6 +86,27 @@ class _CachedEnforced(AbstractUninitializedGlobalReadNode):
                 executing_domain, [self._global_name], executing_domain)
         else:
             return self._next_in_cache.execute(frame)
+
+
+class _StandardDomainUncached(_CachedEnforced):
+
+    def execute(self, frame):
+        if self._is_cached_domain(frame):
+            if self._universe.has_global(self._global_name):
+                return self._specialize().execute(frame)
+            else:
+                return frame.get_self().send_unknown_global_enforced(
+                    self._global_name, self._universe,
+                    frame.get_executing_domain())
+        else:
+            return self._next_in_cache.execute(frame)
+
+    def _specialize(self):
+        return self.replace(_StandardDomainCached(self._global_name,
+                                                  self._domain_class,
+                                                  self._next_in_cache,
+                                                  self._universe,
+                                                  self._source_section))
 
 
 class _StandardDomainCached(_CachedEnforced):
@@ -105,5 +129,5 @@ class _StandardDomainCached(_CachedEnforced):
 class _GenericEnforced(AbstractUninitializedGlobalReadNode):
 
     def execute(self, frame):
-        return read_global(self._global_name, self._universe,
+        return read_global(self._global_name, frame.get_self(), self._universe,
                            frame.get_executing_domain())
