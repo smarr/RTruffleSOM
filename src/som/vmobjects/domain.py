@@ -57,9 +57,9 @@ def request_execution_of_void(selector, rcvr, args, lookup_class, universe,
 
 
 
-def read_global(symbol, universe, executing_domain):
-    return executing_domain.send_unenforced("readGlobal:", [symbol], universe,
-                                            executing_domain)
+def read_global(symbol, rcvr, universe, executing_domain):
+    return executing_domain.send_unenforced("readGlobal:for:", [symbol, rcvr],
+                                            universe, executing_domain)
 
 
 def read_field_of(field_idx, obj, universe, executing_domain):
