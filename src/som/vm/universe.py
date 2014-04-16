@@ -337,10 +337,8 @@ class Universe(object):
         return Class(self, class_class.get_number_of_instance_fields(),
                        class_class, domain)
 
-    def new_method(self, signature, invokable, is_primitive,
-                   embedded_block_method):
-        return Method(signature, invokable, is_primitive, embedded_block_method,
-                      self)
+    def new_method(self, signature, invokable, embedded_block_methods):
+        return Method(signature, invokable, embedded_block_methods, self)
 
     def new_instance(self, instance_class, domain):
         return Object(self.nilObject, domain, instance_class,

@@ -116,7 +116,7 @@ class MethodGenerationContext(object):
             method = Invokable(self._get_source_section_for_method(method_body_un),
                                method_body_en, method_body_un,
                                len(self._locals), self._universe)
-        return self._universe.new_method(self._signature, method, False,
+        return self._universe.new_method(self._signature, method,
                                          # copy list to make it immutable for RPython
                                          self._embedded_block_methods[:])
 
