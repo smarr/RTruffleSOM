@@ -8,6 +8,7 @@ class Class(Object):
                           "_name",
                           "_instance_fields"
                           "_instance_invokables",
+                          "_invokables_table",
                           "_universe"]
     
     def __init__(self, universe, number_of_fields = -1, obj_class = None,
