@@ -7,6 +7,7 @@ class Integer(AbstractObject):
     
     def __init__(self, value):
         AbstractObject.__init__(self)
+        assert isinstance(value, int)
         self._embedded_integer = value
     
     def get_embedded_integer(self):
