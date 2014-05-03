@@ -37,13 +37,13 @@ class Primitive(AbstractObject):
     def invoke_unenforced_void(self, rcvr, args, executing_domain):
         self.invoke_unenforced(rcvr, args, executing_domain)
 
-    def is_primitive(self):
+    @staticmethod
+    def is_primitive():
         return True
-    
-    def is_invokable(self):
-        """In the RPython version, we use this method to identify methods 
-           and primitives
-        """
+
+    @staticmethod
+    def is_invokable():
+        """ We use this method to identify methods and primitives """
         return True
 
     def get_signature(self):
