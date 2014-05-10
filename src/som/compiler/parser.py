@@ -90,7 +90,7 @@ class Parser(object):
         self._text     = None
         self._next_sym = Symbol.NONE
         self._get_symbol_from_lexer()
- 
+
     def classdef(self, cgenc):
         cgenc.set_name(self._universe.symbol_for(self._text))
         self._expect(Symbol.Identifier)
@@ -382,7 +382,7 @@ class Parser(object):
     def _result(self, mgenc):
         enforced, unenforced = self._expression(mgenc)
         coord = self._lexer.get_source_coordinate()
- 
+
         self._accept(Symbol.Period)
 
         if mgenc.is_block_method():
@@ -431,7 +431,7 @@ class Parser(object):
         var_name = self._variable()
         self._expect(Symbol.Assign)
         return var_name
- 
+
     def _evaluation(self, mgenc):
         enforced, unenforced = self._primary(mgenc)
  
@@ -500,9 +500,9 @@ class Parser(object):
         coord = self._lexer.get_source_coordinate()
         selector = self._unary_selector()
         msg_en = UninitializedMessageNodeEnforced(selector,   self._universe,
-                                                  receiver_en, None)
+                                                  receiver_en, [])
         msg_un = UninitializedMessageNodeUnenforced(selector, self._universe,
-                                                    receiver_un, None)
+                                                    receiver_un, [])
         return self._assign_source(msg_en, coord), \
                self._assign_source(msg_un, coord)
 
@@ -567,7 +567,7 @@ class Parser(object):
         if self._sym == Symbol.STString:
             return self._literal_string()
         return self._literal_number()
-     
+
     def _literal_number(self):
         coord = self._lexer.get_source_coordinate()
 
@@ -674,12 +674,12 @@ class Parser(object):
 
         if self._sym == Symbol.Colon:
             self._block_pattern(mgenc)
- 
+
         # generate Block signature
         block_sig = "$blockMethod"
         arg_size = mgenc.get_number_of_arguments()
         block_sig += ":" * (arg_size - 1)
- 
+
         mgenc.set_signature(self._universe.symbol_for(block_sig))
  
         expr_en, expr_un = self._block_contents(mgenc)
@@ -689,7 +689,7 @@ class Parser(object):
     def _block_pattern(self, mgenc):
         self._block_arguments(mgenc)
         self._expect(Symbol.Or)
- 
+
     def _block_arguments(self, mgenc):
         self._expect(Symbol.Colon)
         mgenc.add_argument_if_absent(self._argument())
