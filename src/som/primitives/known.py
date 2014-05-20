@@ -3,7 +3,7 @@ from rpython.rlib.unroll import unrolling_iterable
    time with RPython.
 """
 
-EXPECTED_NUMBER_OF_PRIMITIVE_FILES = 13
+EXPECTED_NUMBER_OF_PRIMITIVE_FILES = 12
 
 
 class PrimitivesNotFound(Exception): pass
@@ -47,7 +47,9 @@ def _setup_primitives():
         sys.exit(1)
     return prim_pairs
 
+
 _primitives = unrolling_iterable(_setup_primitives())
+
 
 def primitives_for_class(cls):
     name = cls.get_name().get_string()

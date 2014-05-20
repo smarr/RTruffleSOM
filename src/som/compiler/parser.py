@@ -17,8 +17,6 @@ from som.interpreter.nodes.enforced.message_node_enforced import \
     UninitializedMessageNodeEnforced
 from .symbol                    import Symbol, symbol_as_str
 
-from ..vmobjects.integer import integer_value_fits
-
 
 class ParseError(BaseException):
     def __init__(self, message, expected_sym, parser):
@@ -600,12 +598,7 @@ class Parser(object):
                              "Expected a number but got '%s'" % self._text,
                              Symbol.NONE, self)
         self._expect(Symbol.Integer)
-
-        if integer_value_fits(i):
-            val = self._universe.new_integer(i)
-        else:
-            val = self._universe.new_biginteger(i)
-
+        val = self._universe.new_integer(i)
         return LiteralNode(val, True), \
             LiteralNode(val, False)
 

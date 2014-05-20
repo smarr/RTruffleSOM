@@ -56,7 +56,6 @@ class Universe(object):
             "metaclassClass",
             "nilClass",
             "integerClass",
-            "bigintegerClass",
             "arrayClass",
             "methodClass",
             "symbolClass",
@@ -84,7 +83,6 @@ class Universe(object):
         
         self.nilClass       = None
         self.integerClass   = None
-        self.bigintegerClass= None
         self.arrayClass     = None
         self.methodClass    = None
         self.symbolClass    = None
@@ -189,7 +187,7 @@ class Universe(object):
     
     def setup_classpath(self, cp):
         self.classpath = cp.split(os.pathsep)
-    
+
     def _setup_default_classpath(self):
         return ['.']
     
@@ -228,7 +226,6 @@ class Universe(object):
         self.symbolClass     = self.new_system_class(self.standardDomain)
         self.methodClass     = self.new_system_class(self.standardDomain)
         self.integerClass    = self.new_system_class(self.standardDomain)
-        self.bigintegerClass = self.new_system_class(self.standardDomain)
         self.primitiveClass  = self.new_system_class(self.standardDomain)
         self.stringClass     = self.new_system_class(self.standardDomain)
         self.doubleClass     = self.new_system_class(self.standardDomain)
@@ -247,7 +244,6 @@ class Universe(object):
         self._initialize_system_class(self.methodClass,     self.objectClass, "Method")
         self._initialize_system_class(self.symbolClass,     self.objectClass, "Symbol")
         self._initialize_system_class(self.integerClass,    self.objectClass, "Integer")
-        self._initialize_system_class(self.bigintegerClass, self.objectClass, "BigInteger")
         self._initialize_system_class(self.primitiveClass,  self.objectClass, "Primitive")
         self._initialize_system_class(self.stringClass,     self.objectClass, "String")
         self._initialize_system_class(self.doubleClass,     self.objectClass, "Double")
@@ -262,7 +258,6 @@ class Universe(object):
         self._load_system_class(self.methodClass)
         self._load_system_class(self.symbolClass)
         self._load_system_class(self.integerClass)
-        self._load_system_class(self.bigintegerClass)
         self._load_system_class(self.primitiveClass)
         self._load_system_class(self.stringClass)
         self._load_system_class(self.doubleClass)
@@ -328,7 +323,7 @@ class Universe(object):
             result.set_indexable_field(i, self.new_string(strings[i]))
     
         return result
-    
+
     def new_block(self, method, context_frame, captured_enforced, domain):
         return Block(method, context_frame, captured_enforced, domain)
 
