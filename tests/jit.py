@@ -39,7 +39,7 @@ class TestLLtype(LLJitMixin):
 
         def interp_w():
             try:
-                invokable.invoke_unenforced(rcvr, None, universe.standardDomain)
+                invokable.invoke_unenforced(rcvr, [], universe.standardDomain)
             except Exit as e:
                 return e.code
             return -1

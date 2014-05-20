@@ -54,6 +54,9 @@ class Invokable(Node):
 
     def _do_invoke(self, receiver, arguments, executing_domain,
                    do_void, enforced):
+        assert arguments is not None
+        make_sure_not_resized(arguments)
+
         jitdriver.jit_merge_point(self=self, receiver=receiver, # frame=frame,
                                   arguments=arguments, executing_domain=executing_domain,
                                   enforced=enforced, do_void=do_void)

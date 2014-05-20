@@ -31,9 +31,9 @@ class IfTrueIfFalseNode(ExpressionNode):
     def _value_of(self, obj, domain):
         if isinstance(obj, Block):
             if self._executes_enforced:
-                return obj.get_method().invoke_enforced(obj, None, domain)
+                return obj.get_method().invoke_enforced(obj, [], domain)
             else:
-                return obj.get_method().invoke_unenforced(obj, None, domain)
+                return obj.get_method().invoke_unenforced(obj, [], domain)
         else:
             return obj
 
@@ -59,9 +59,9 @@ class IfTrueIfFalseNode(ExpressionNode):
     def _value_of_void(self, obj, domain):
         if isinstance(obj, Block):
             if self._executes_enforced:
-                obj.get_method().invoke_enforced_void(obj, None, domain)
+                obj.get_method().invoke_enforced_void(obj, [], domain)
             else:
-                obj.get_method().invoke_unenforced_void(obj, None, domain)
+                obj.get_method().invoke_unenforced_void(obj, [], domain)
 
     def _do_iftrue_iffalse_void(self, rcvr, true, false, domain):
         if rcvr is self._universe.trueObject:
@@ -118,18 +118,18 @@ class IfNode(ExpressionNode):
     def _value_of(self, obj, domain):
         if isinstance(obj, Block):
             if self._executes_enforced:
-                return obj.get_method().invoke_enforced(obj, None, domain)
+                return obj.get_method().invoke_enforced(obj, [], domain)
             else:
-                return obj.get_method().invoke_unenforced(obj, None, domain)
+                return obj.get_method().invoke_unenforced(obj, [], domain)
         else:
             return obj
     
     def _value_of_void(self, obj, domain):
         if isinstance(obj, Block):
             if self._executes_enforced:
-                obj.get_method().invoke_enforced_void(obj, None, domain)
+                obj.get_method().invoke_enforced_void(obj, [], domain)
             else:
-                obj.get_method().invoke_unenforced_void(obj, None, domain)
+                obj.get_method().invoke_unenforced_void(obj, [], domain)
 
     def _do_if(self, rcvr, branch, domain):
         if rcvr is self._condition:

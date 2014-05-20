@@ -87,17 +87,17 @@ class WhileMessageNode(AbstractWhileMessageNode):
                                          node            = self)
 
             if self._executes_enforced:
-                condition_value = condition_method.invoke_enforced(rcvr_block, None, domain)
+                condition_value = condition_method.invoke_enforced(rcvr_block, [], domain)
             else:
-                condition_value = condition_method.invoke_unenforced(rcvr_block, None, domain)
+                condition_value = condition_method.invoke_unenforced(rcvr_block, [], domain)
 
             if condition_value is not self._predicate_bool:
                 break
 
             if self._executes_enforced:
-                body_method.invoke_enforced_void(body_block, None, domain)
+                body_method.invoke_enforced_void(body_block, [], domain)
             else:
-                body_method.invoke_unenforced_void(body_block, None, domain)
+                body_method.invoke_unenforced_void(body_block, [], domain)
 
 
     @staticmethod
