@@ -125,7 +125,7 @@ class Universe(object):
         invokable = clazz.get_class(self).lookup_invokable(self.symbol_for(
             selector))
 
-        return invokable.invoke_unenforced(clazz, None, self.standardDomain)
+        return invokable.invoke_unenforced(clazz, [], self.standardDomain)
     
     def interpret(self, arguments):
         # Check for command line switches
