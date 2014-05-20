@@ -39,7 +39,7 @@ def _perform(ivkbl, rcvr, args, domain):
 
     ## TODO: I think, statically doing unenforced here is wrong, needs
     ##       take current execution state into account
-    return invokable.invoke_unenforced(rcvr, None, domain)
+    return invokable.invoke_unenforced(rcvr, [], domain)
 
 
 def _performInSuperclass(ivkbl, rcvr, args, domain):
@@ -49,7 +49,7 @@ def _performInSuperclass(ivkbl, rcvr, args, domain):
     invokable = clazz.lookup_invokable(selector)
     ## TODO: I think, statically doing unenforced here is wrong, needs
     ##       take current execution state into account
-    return invokable.invoke_unenforced(rcvr, None, domain)
+    return invokable.invoke_unenforced(rcvr, [], domain)
 
 
 def _performWithArguments(ivkbl, rcvr, args, domain):
@@ -92,7 +92,7 @@ def _class(ivkbl, rcvr, args, domain):
 def _performEnforced(ivkbl, rcvr, args, domain):
     selector = args[0]
     invokable = rcvr.get_class(ivkbl.get_universe()).lookup_invokable(selector)
-    return invokable.invoke_enforced(rcvr, None, domain)
+    return invokable.invoke_enforced(rcvr, [], domain)
 
 
 def _performEnforcedWithArgs(ivkbl, rcvr, args, domain):
@@ -108,7 +108,7 @@ def _performEnforcedInSuperclass(ivkbl, rcvr, args, domain):
     selector = args[0]
 
     invokable = clazz.lookup_invokable(selector)
-    return invokable.invoke_enforced(rcvr, None, domain)
+    return invokable.invoke_enforced(rcvr, [], domain)
 
 
 def _performEnforcedWithArgsInSuperclass(ivkbl, rcvr, args, domain):
