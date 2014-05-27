@@ -1,3 +1,5 @@
+from rpython.rlib.rbigint import rbigint
+from rpython.rlib.rstring import ParseStringOverflowError
 from rtruffle.source_section import SourceSection
 
 from ..interpreter.nodes.block_node       import BlockNode, BlockNodeWithContext
@@ -593,14 +595,19 @@ class Parser(object):
             i = int(self._text)
             if negate_value:
                 i = 0 - i
+            result = self._universe.new_integer(i)
+        except ParseStringOverflowError:
+            bigint = rbigint.fromstr(self._text)
+            if negate_value:
+                bigint.sign = -1
+            result = self._universe.new_biginteger(bigint)
         except ValueError:
             raise ParseError("Could not parse integer. "
                              "Expected a number but got '%s'" % self._text,
                              Symbol.NONE, self)
         self._expect(Symbol.Integer)
-        val = self._universe.new_integer(i)
-        return LiteralNode(val, True), \
-            LiteralNode(val, False)
+        return LiteralNode(result, True), \
+            LiteralNode(result, False)
 
     def _literal_double(self, negate_value):
         try:
