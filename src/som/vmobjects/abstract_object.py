@@ -24,13 +24,16 @@ class AbstractObject(object):
         invokable = self.get_class(universe).lookup_invokable(selector)
         invokable.invoke_unenforced_void(self, arguments, domain)
 
-    def _prepare_dnu_arguments(self, arguments, selector, universe, domain):
-        number_of_arguments = selector.get_number_of_signature_arguments()
+    @staticmethod
+    def _prepare_dnu_arguments(arguments, selector, universe, domain):
+        # Compute the number of arguments
+        number_of_arguments = selector.get_number_of_signature_arguments() - 1 ## without self
+        assert number_of_arguments == len(arguments)
+
         ## TODO: make sure that we select the right domain here as owner
         ##       this needs to be confirmed after all that is fixed
-        arguments_array = universe.new_array_with_length(number_of_arguments,
-                                                         domain)
-        for i in range(0, number_of_arguments - 1):
+        arguments_array = universe.new_array_with_length(number_of_arguments, domain)
+        for i in range(0, number_of_arguments):
             arguments_array.set_indexable_field(i, arguments[i])
         args = [selector, arguments_array]
         return args
