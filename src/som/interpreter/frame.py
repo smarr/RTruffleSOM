@@ -1,4 +1,5 @@
 from rpython.rlib import jit
+from rpython.rlib.debug import make_sure_not_resized
 
 
 class Frame(object):
@@ -8,8 +9,11 @@ class Frame(object):
 
     def __init__(self, receiver, arguments, number_of_temps,
                  nilObject, executing_domain):
-        self._receiver       = receiver
-        self._arguments      = arguments
+        make_sure_not_resized(arguments)
+        make_sure_not_resized(arg_mapping)
+        nilObject = jit.promote(nilObject)
+        self._receiver        = receiver
+        self._arguments       = arguments
         self._on_stack       = True
         self._temps          = [nilObject] * number_of_temps
         self._executing_domain = executing_domain

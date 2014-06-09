@@ -1,3 +1,4 @@
+from rpython.rlib.jit import promote
 from .abstract_object import AbstractObject
 
 
@@ -7,6 +8,7 @@ class Array(AbstractObject):
     
     def __init__(self, nilObject, number_of_indexable_fields, domain, values = None):
         AbstractObject.__init__(self)
+        nilObject = promote(nilObject)
 
         # Private array of indexable fields
         if values is None:
