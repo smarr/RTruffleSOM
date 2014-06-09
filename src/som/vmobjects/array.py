@@ -12,7 +12,7 @@ class Array(AbstractObject):
 
         # Private array of indexable fields
         if values is None:
-            self._indexable_fields = [nilObject] * number_of_indexable_fields
+            self._indexable_fields = [nilObject] * promote(number_of_indexable_fields)
         else:
             self._indexable_fields = values
         self._domain = domain
