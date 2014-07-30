@@ -1,3 +1,4 @@
+from rpython.rlib.debug import make_sure_not_resized
 from .expression_node import ExpressionNode
 from som.vmobjects.abstract_object import AbstractObject
 
