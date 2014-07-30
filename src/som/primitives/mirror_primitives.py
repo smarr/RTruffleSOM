@@ -20,13 +20,13 @@ def _set_domain_of_to(ivkbl, rcvr, args, domain):
 def _evaluate_in(ivkbl, rcvr, args, domain):
     assert isinstance(args[0], Block)
     assert isinstance(args[1], Object)
-    return args[0].get_method().invoke_unenforced(args[0], None, args[1])
+    return args[0].get_method().invoke_unenforced(args[0], [], args[1])
 
 
 def _evaluated_enforced_in(ivkbl, rcvr, args, domain):
     assert isinstance(args[0], Block)
     assert isinstance(args[1], Object)
-    return args[0].get_method().invoke_enforced(args[0], None, args[1])
+    return args[0].get_method().invoke_enforced(args[0], [], args[1])
 
 
 def _current_domain(ivkbl, rcvr, args, domain):
