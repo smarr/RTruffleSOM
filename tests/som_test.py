@@ -26,6 +26,7 @@ class SomTest(unittest.TestCase):
         ("SelfBlock"     ,),
         ("Super"         ,),
 
+        ("Set"           ,),
         ("String"        ,),
         ("Symbol"        ,),
         ("System"        ,),
