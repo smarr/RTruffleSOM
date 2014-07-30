@@ -10,7 +10,6 @@ class Frame(object):
     def __init__(self, receiver, arguments, number_of_temps,
                  nilObject, executing_domain):
         make_sure_not_resized(arguments)
-        make_sure_not_resized(arg_mapping)
         nilObject = jit.promote(nilObject)
         self._receiver        = receiver
         self._arguments       = arguments
