@@ -131,6 +131,7 @@ class _AbstractGenericEnforced(_AbstractEnforced):
         self._field_idx = field_idx ## TODO: should probably convert it already into an SOM Integer
         self._universe  = universe
 
+
 class _GenericEnforcedRead(_AbstractGenericEnforced):
 
     def read_field(self, obj, executing_domain):
