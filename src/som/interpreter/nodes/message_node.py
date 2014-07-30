@@ -103,6 +103,7 @@ class GenericMessageNodeUnenforced(AbstractGenericMessageNode):
                                             arg_exprs, False, source_section)
 
     def execute_evaluated_void(self, frame, rcvr, args):
+        assert args is not None
         method = self._lookup_method(rcvr)
         if method:
             method.invoke_unenforced_void(rcvr, args,
@@ -113,6 +114,7 @@ class GenericMessageNodeUnenforced(AbstractGenericMessageNode):
                 frame.get_executing_domain())
 
     def execute_evaluated(self, frame, rcvr, args):
+        assert args is not None
         method = self._lookup_method(rcvr)
         if method:
             result = method.invoke_unenforced(rcvr, args,

@@ -274,7 +274,9 @@ class GenericMessageNodeEnforced(AbstractGenericMessageNode):
             selector, universe, super_class))
 
     def execute_evaluated_void(self, frame, rcvr, args):
+        assert args is not None
         return self._dispatch.dispatch_void(frame, rcvr, args)
 
     def execute_evaluated(self, frame, rcvr, args):
+        assert args is not None
         return self._dispatch.dispatch(frame, rcvr, args)
