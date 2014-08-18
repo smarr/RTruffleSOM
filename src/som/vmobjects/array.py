@@ -4,7 +4,7 @@ from .abstract_object import AbstractObject
 
 class Array(AbstractObject):
 
-    _immutable_fields_ = ["_indexable_fields"]
+    _immutable_fields_ = ["_indexable_fields", "_domain?"]
     
     def __init__(self, nilObject, number_of_indexable_fields, domain, values = None):
         AbstractObject.__init__(self)

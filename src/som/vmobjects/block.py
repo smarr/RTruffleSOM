@@ -6,7 +6,7 @@ from som.vmobjects.primitive import Primitive
 
 class Block(AbstractObject):
     
-    _immutable_fields_ = ["_method", "_context", "_captured_enforced"]
+    _immutable_fields_ = ["_method", "_context", "_captured_enforced", "_domain?"]
     
     def __init__(self, method, context, captured_enforced, domain):
         AbstractObject.__init__(self)
