@@ -1,8 +1,10 @@
 from rtruffle.node import Node
 from som.interpreter.nodes.field_node import AbstractFieldNode, \
-    AbstractFieldWriteNode
+    AbstractFieldWriteNode, get_read_node_class, UnenforcedFieldReadNodeN, \
+    get_write_node_class, UnenforcedFieldWriteNodeN
 from som.vmobjects.abstract_object import AbstractObject
 from som.vmobjects.domain import read_field_of, write_to_field_of
+from som.vmobjects.object import Object
 
 
 _POLYMORPHISM_LIMIT = 6
@@ -51,9 +53,15 @@ class _UninitializedEnforcedRead(_AbstractUninitializedEnforced):
                                                    self._universe)
         rcvr_domain = obj.get_domain(self._universe)
         rcvr_domain_class = rcvr_domain.get_class(self._universe)
-        return self.replace(_CachedDomainRead(self._field_idx,
-                                              rcvr_domain_class,
-                                              uninitialized, self._universe))
+
+        if rcvr_domain_class is self._universe.domainClass:
+            return self.replace(_StandardDomainRead(self._field_idx,
+                                                    self._universe.domainClass,
+                                                    uninitialized, self._universe))
+        else:
+            return self.replace(_CachedDomainRead(self._field_idx,
+                                                  rcvr_domain_class,
+                                                  uninitialized, self._universe))
 
 
 class EnforcedFieldReadNode(AbstractFieldNode):
@@ -120,6 +128,36 @@ class _CachedDomainRead(_AbstractCachedDomain):
             self._next_in_cache.read_field_void(obj, executing_domain)
 
 
+class _StandardDomainRead(_AbstractCachedDomain):
+
+    _immutable_fields_ = ["_read?"]
+    _child_nodes_      = ["_read"]
+
+    def __init__(self, field_idx, domain_class, next_in_cache, universe):
+        _AbstractCachedDomain.__init__(self, field_idx, domain_class,
+                                       next_in_cache, universe)
+        self._read = (get_read_node_class(field_idx)(None)
+                      if field_idx < Object.NUMBER_OF_DIRECT_FIELDS else
+                      UnenforcedFieldReadNodeN(None,
+                                               field_idx - Object.NUMBER_OF_DIRECT_FIELDS))
+
+    @staticmethod
+    def _get_handler(domain_class, universe):
+        return None
+
+    def read_field(self, obj, executing_domain):
+        if self._is_cached_domain(obj):
+            return self._read.do_read(obj)
+        else:
+            return self._next_in_cache.read_field(obj, executing_domain)
+
+    def read_field_void(self, obj, executing_domain):
+        if self._is_cached_domain(obj):
+            return
+        else:
+            return self._next_in_cache.read_field_void(obj, executing_domain)
+
+
 class _AbstractGenericEnforced(_AbstractEnforced):
 
     _immutable_fields_ = ["_field_idx", "_universe"]
@@ -157,10 +195,17 @@ class _UninitializedEnforcedWrite(_AbstractUninitializedEnforced):
                                                     self._universe)
         rcvr_domain = obj.get_domain(self._universe)
         rcvr_domain_class = rcvr_domain.get_class(self._universe)
-        return self.replace(_CachedDomainWrite(self._field_idx,
-                                               rcvr_domain_class,
-                                               uninitialized,
-                                               self._universe))
+
+        if rcvr_domain_class is self._universe.domainClass:
+            return self.replace(_StandardDomainWrite(self._field_idx,
+                                                     rcvr_domain_class,
+                                                     uninitialized,
+                                                     self._universe))
+        else:
+            return self.replace(_CachedDomainWrite(self._field_idx,
+                                                   rcvr_domain_class,
+                                                   uninitialized,
+                                                   self._universe))
 
 
 class EnforcedFieldWriteNode(AbstractFieldWriteNode):
@@ -175,7 +220,7 @@ class EnforcedFieldWriteNode(AbstractFieldWriteNode):
         self._write = self.adopt_child(_UninitializedEnforcedWrite(field_idx,
                                                                    universe))
 
-    def write(self, frame, self_obj, value):
+    def do_write(self, frame, self_obj, value):
         """ There is no write_void, because we do the write for the side effect
             in all cases """
         return self._write.write_field(self_obj, value,
@@ -194,6 +239,30 @@ class _CachedDomainWrite(_AbstractCachedDomain):
             rcvr_domain = obj.get_domain(self._universe)
             return self._intercession_handler.invoke_unenforced(
                 rcvr_domain, [value, self._field_idx, obj], executing_domain)
+        else:
+            return self._next_in_cache.write_field(obj, value, executing_domain)
+
+
+class _StandardDomainWrite(_AbstractCachedDomain):
+
+    _immutable_fields_ = ["_write?"]
+    _child_nodes_      = ["_write"]
+
+    def __init__(self, field_idx, domain_class, next_in_cache, universe):
+        _AbstractCachedDomain.__init__(self, field_idx, domain_class,
+                                       next_in_cache, universe)
+        self._write = (get_write_node_class(field_idx)(None, None)
+                       if field_idx < Object.NUMBER_OF_DIRECT_FIELDS else
+                       UnenforcedFieldWriteNodeN(None, None,
+                                                 field_idx - Object.NUMBER_OF_DIRECT_FIELDS))
+
+    @staticmethod
+    def _get_handler(domain_class, universe):
+        return None
+
+    def write_field(self, obj, value, executing_domain):
+        if self._is_cached_domain(obj):
+            return self._write.do_write(None, obj, value)
         else:
             return self._next_in_cache.write_field(obj, value, executing_domain)
 

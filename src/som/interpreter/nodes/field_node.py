@@ -22,8 +22,7 @@ class _AbstractUnenforcedFieldReadNode(AbstractFieldNode):
 
     def execute(self, frame):
         self_obj = self._self_exp.execute(frame)
-        assert isinstance(self_obj, Object)
-        return self.read(self_obj)
+        return self.do_read(self_obj)
     
     def execute_void(self, frame):
         pass  # NOOP, because it is side-effect free
@@ -31,7 +30,8 @@ class _AbstractUnenforcedFieldReadNode(AbstractFieldNode):
 
 def _make_field_read_node_class(field_idx):
     class _UnenforcedFieldReadNodeI(_AbstractUnenforcedFieldReadNode):
-        def read(self, self_obj):
+        def do_read(self, self_obj):
+            assert isinstance(self_obj, Object)
             return getattr(self_obj, "_field" + str(field_idx))
     return _UnenforcedFieldReadNodeI
 
@@ -50,7 +50,8 @@ class UnenforcedFieldReadNodeN(_AbstractUnenforcedFieldReadNode):
         assert extension_index >= 0
         self._extension_index = extension_index
 
-    def read(self, self_obj):
+    def do_read(self, self_obj):
+        assert isinstance(self_obj, Object)
         return self_obj._fields[self._extension_index]
 
 
@@ -66,9 +67,8 @@ class AbstractFieldWriteNode(AbstractFieldNode):
     def execute(self, frame):
         self_obj = self._self_exp.execute(frame)
         value    = self._value_exp.execute(frame)
-        assert isinstance(self_obj, Object)
         assert isinstance(value, AbstractObject)
-        self.write(frame, self_obj, value)
+        self.do_write(frame, self_obj, value)
         return value
     
     def execute_void(self, frame):
@@ -84,7 +84,8 @@ class _AbstractUnenforcedFieldWriteNode(AbstractFieldWriteNode):
 
 def _make_field_write_node_class(field_idx):
     class _UnenforcedFieldWriteNodeI(_AbstractUnenforcedFieldWriteNode):
-        def write(self, frame, self_obj, value):
+        def do_write(self, frame, self_obj, value):
+            assert isinstance(self_obj, Object)
             setattr(self_obj, "_field" + str(field_idx), value)
             return value
     return _UnenforcedFieldWriteNodeI
@@ -104,7 +105,8 @@ class UnenforcedFieldWriteNodeN(_AbstractUnenforcedFieldWriteNode):
         assert extension_index >= 0
         self._extension_index = extension_index
 
-    def write(self, frame, self_obj, value):
+    def do_write(self, frame, self_obj, value):
+        assert isinstance(self_obj, Object)
         self_obj._fields[self._extension_index] = value
 
 
