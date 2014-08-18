@@ -31,10 +31,15 @@ def arg_array_to_som_array(args, domain, universe):
 def request_primitive_execution(prim, rcvr, args, executing_domain):
     universe = prim.get_universe()
     rcvr_domain = rcvr.get_domain(universe)
-    som_args = arg_array_to_som_array(args, rcvr_domain, universe)
-    return rcvr_domain.send_unenforced("requestExecutionOfPrimitive:with:on:",
-                                       [prim, som_args, rcvr], universe,
-                                       executing_domain)
+
+    if rcvr_domain.get_class(universe) is universe.domainClass:
+        raise RuntimeError()
+        return prim.invoke_unenforced(rcvr, args, executing_domain)
+    else:
+        som_args = arg_array_to_som_array(args, rcvr_domain, universe)
+        return rcvr_domain.send_unenforced("requestExecutionOfPrimitive:with:on:",
+                                           [prim, som_args, rcvr], universe,
+                                           executing_domain)
 
 
 def request_execution_of(selector, rcvr, args, lookup_class, universe,
