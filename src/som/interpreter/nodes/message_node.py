@@ -1,5 +1,7 @@
 from rpython.rlib.debug import make_sure_not_resized
 from .expression_node import ExpressionNode
+from som.interpreter.nodes.specialized.down_to_do_node import IntDownToIntDoNode, \
+    IntDownToDoubleDoNode
 from som.vmobjects.abstract_object import AbstractObject
 
 from .specialized.if_true_false import IfTrueIfFalseNode, IfNode
@@ -58,6 +60,7 @@ class UninitializedMessageNodeUnenforced(AbstractUninitializedMessageNode):
             for specialization in [WhileMessageNode,
                                    IntToIntDoNode,   IntToDoubleDoNode,
                                    IntToIntByDoNode, IntToDoubleByDoNode,
+                                   IntDownToIntDoNode, IntDownToDoubleDoNode,
                                    IfTrueIfFalseNode,
                                    IfNode]:
                 if specialization.can_specialize(self._selector, rcvr, args,

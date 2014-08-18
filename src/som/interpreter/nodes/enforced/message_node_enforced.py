@@ -1,6 +1,8 @@
 from rtruffle.node import Node
 from som.interpreter.nodes.message_node import AbstractGenericMessageNode, \
     AbstractUninitializedMessageNode
+from som.interpreter.nodes.specialized.down_to_do_node import IntDownToIntDoNode, \
+    IntDownToDoubleDoNode
 from som.interpreter.nodes.specialized.if_true_false import IfNode, \
     IfTrueIfFalseNode
 from som.interpreter.nodes.specialized.to_by_do_node import IntToIntByDoNode, \
@@ -28,6 +30,7 @@ class UninitializedMessageNodeEnforced(AbstractUninitializedMessageNode):
             for specialization in [WhileMessageNode,
                                    IntToIntDoNode,   IntToDoubleDoNode,
                                    IntToIntByDoNode, IntToDoubleByDoNode,
+                                   IntDownToIntDoNode, IntDownToDoubleDoNode,
                                    IfTrueIfFalseNode,
                                    IfNode]:
                 if specialization.can_specialize(self._selector, rcvr, args,
