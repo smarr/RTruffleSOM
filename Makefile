@@ -18,8 +18,8 @@ RTruffleSOM-jit:
 test: compile
 	PYTHONPATH=$(PYTHONPATH):$(PYPY_DIR) nosetests
 	./som.sh             -cp Smalltalk:core-lib/SUnit:TestSuite/OMOP TestSuite/TestHarness.som
-	./RTruffleSOM-no-jit -cp Smalltalk:core-lib/SUnit:TestSuite/OMOP TestSuite/TestHarness.som
-	./RTruffleSOM-jit    -cp Smalltalk:core-lib/SUnit:TestSuite/OMOP TestSuite/TestHarness.som
+	if [ -e ./RTruffleSOM-no-jit ]; then ./RTruffleSOM-no-jit -cp Smalltalk:core-lib/SUnit:TestSuite/OMOP TestSuite/TestHarness.som; fi
+	if [ -e ./RTruffleSOM-jit    ]; then ./RTruffleSOM-jit    -cp Smalltalk:core-lib/SUnit:TestSuite/OMOP TestSuite/TestHarness.som; fi
 
 clean:
 	@-rm RTruffleSOM-no-jit
