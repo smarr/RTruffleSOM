@@ -56,10 +56,12 @@ class _UninitializedEnforcedRead(_AbstractUninitializedEnforced):
 
         if rcvr_domain_class is self._universe.domainClass:
             return self.replace(_StandardDomainRead(self._field_idx,
+                                                    rcvr_domain,
                                                     self._universe.domainClass,
                                                     uninitialized, self._universe))
         else:
             return self.replace(_CachedDomainRead(self._field_idx,
+                                                  rcvr_domain,
                                                   rcvr_domain_class,
                                                   uninitialized, self._universe))
 
@@ -85,13 +87,14 @@ class EnforcedFieldReadNode(AbstractFieldNode):
 
 class _AbstractCachedDomain(_AbstractEnforced):
 
-    _immutable_fields_ = ['_field_idx', '_rcvr_domain_class', '_next_in_cache?',
+    _immutable_fields_ = ['_field_idx', '_rcvr_domain', '_rcvr_domain_class', '_next_in_cache?',
                           '_universe', '_intercession_handler']
     _child_nodes_      = ['_next_in_cache']
 
-    def __init__(self, field_idx, domain_class, next_in_cache, universe):
+    def __init__(self, field_idx, domain, domain_class, next_in_cache, universe):
         _AbstractEnforced.__init__(self)
         self._field_idx         = universe.new_integer(field_idx + 1)
+        self._rcvr_domain       = domain
         self._rcvr_domain_class = domain_class
         self._next_in_cache     = self.adopt_child(next_in_cache)
         self._universe          = universe
@@ -100,6 +103,8 @@ class _AbstractCachedDomain(_AbstractEnforced):
 
     def _is_cached_domain(self, rcvr):
         rcvr_domain = rcvr.get_domain(self._universe)
+        if rcvr_domain is self._rcvr_domain:
+            return True
         rcvr_domain_class = rcvr_domain.get_class(self._universe)
         return rcvr_domain_class is self._rcvr_domain_class
 
@@ -133,8 +138,8 @@ class _StandardDomainRead(_AbstractCachedDomain):
     _immutable_fields_ = ["_read?"]
     _child_nodes_      = ["_read"]
 
-    def __init__(self, field_idx, domain_class, next_in_cache, universe):
-        _AbstractCachedDomain.__init__(self, field_idx, domain_class,
+    def __init__(self, field_idx, domain, domain_class, next_in_cache, universe):
+        _AbstractCachedDomain.__init__(self, field_idx, domain, domain_class,
                                        next_in_cache, universe)
         self._read = (get_read_node_class(field_idx)(None)
                       if field_idx < Object.NUMBER_OF_DIRECT_FIELDS else
@@ -198,11 +203,13 @@ class _UninitializedEnforcedWrite(_AbstractUninitializedEnforced):
 
         if rcvr_domain_class is self._universe.domainClass:
             return self.replace(_StandardDomainWrite(self._field_idx,
+                                                     rcvr_domain,
                                                      rcvr_domain_class,
                                                      uninitialized,
                                                      self._universe))
         else:
             return self.replace(_CachedDomainWrite(self._field_idx,
+                                                   rcvr_domain,
                                                    rcvr_domain_class,
                                                    uninitialized,
                                                    self._universe))
@@ -248,8 +255,8 @@ class _StandardDomainWrite(_AbstractCachedDomain):
     _immutable_fields_ = ["_write?"]
     _child_nodes_      = ["_write"]
 
-    def __init__(self, field_idx, domain_class, next_in_cache, universe):
-        _AbstractCachedDomain.__init__(self, field_idx, domain_class,
+    def __init__(self, field_idx, domain, domain_class, next_in_cache, universe):
+        _AbstractCachedDomain.__init__(self, field_idx, domain, domain_class,
                                        next_in_cache, universe)
         self._write = (get_write_node_class(field_idx)(None, None)
                        if field_idx < Object.NUMBER_OF_DIRECT_FIELDS else
