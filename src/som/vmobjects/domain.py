@@ -33,7 +33,6 @@ def request_primitive_execution(prim, rcvr, args, executing_domain):
     rcvr_domain = rcvr.get_domain(universe)
 
     if rcvr_domain.get_class(universe) is universe.domainClass:
-        raise RuntimeError()
         return prim.invoke_unenforced(rcvr, args, executing_domain)
     else:
         som_args = arg_array_to_som_array(args, rcvr_domain, universe)
