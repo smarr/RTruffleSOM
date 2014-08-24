@@ -15,7 +15,13 @@ class Block(AbstractObject):
         self._context = context
         self._captured_enforced = captured_enforced
         self._domain  = domain
-        
+
+    def is_same_context(self, other_block):
+        assert isinstance(other_block, Block)
+        return (self._context == other_block._context and
+                self._domain  == other_block._domain  and
+                self._captured_enforced == other_block._captured_enforced)
+
     def get_method(self):
         return jit.promote(self._method)
     

@@ -81,10 +81,17 @@ class WhileMessageNode(AbstractWhileMessageNode):
         condition_method = rcvr_block.get_method()
         body_method      = body_block.get_method()
 
+        if rcvr_block.is_same_context(body_block):
+            rcvr_block = body_block
+
         while True:
             while_driver.jit_merge_point(body_method     = body_method,
                                          condition_method= condition_method,
                                          node            = self)
+
+            # STEFAN: looks stupid but might help the jit
+            if rcvr_block is body_block:
+                rcvr_block = body_block
 
             if self._executes_enforced:
                 condition_value = condition_method.invoke_enforced(rcvr_block, [], domain)
