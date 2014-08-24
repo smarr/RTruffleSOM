@@ -14,7 +14,8 @@ class Frame(object):
         self._receiver        = receiver
         self._arguments       = arguments
         self._on_stack       = True
-        self._temps          = [nilObject] * number_of_temps
+        self._temps          = ([] if   number_of_temps == 0
+                                   else [nilObject] * number_of_temps)
         self._executing_domain = executing_domain
 
     def get_argument(self, index):

@@ -32,7 +32,10 @@ class AbstractMessageNode(ExpressionNode):
     def _evaluate_rcvr_and_args(self, frame):
         rcvr = self._rcvr_expr.execute(frame)
         assert isinstance(rcvr, AbstractObject)
-        args = [arg_exp.execute(frame) for arg_exp in self._arg_exprs]
+        if len(self._arg_exprs) == 0:
+            args = []
+        else:
+            args = [arg_exp.execute(frame) for arg_exp in self._arg_exprs]
         return rcvr, args
 
 
