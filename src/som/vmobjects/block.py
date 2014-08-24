@@ -1,4 +1,5 @@
 from rpython.rlib import jit
+from rpython.rlib.jit import promote
 
 from som.vmobjects.abstract_object import AbstractObject
 from som.vmobjects.primitive import Primitive
@@ -28,7 +29,7 @@ class Block(AbstractObject):
         return universe.blockClasses[self._method.get_number_of_arguments()]
 
     def get_domain(self, universe):
-        return self._domain
+        return promote(self._domain)
 
     def set_domain(self, domain):
         self._domain = domain

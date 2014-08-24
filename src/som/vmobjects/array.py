@@ -55,7 +55,7 @@ class Array(AbstractObject):
         return universe.arrayClass
 
     def get_domain(self, universe):
-        return self._domain
+        return promote(self._domain)
 
     def set_domain(self, domain):
         self._domain = domain

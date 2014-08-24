@@ -1,4 +1,4 @@
-from rpython.rlib.jit import promote
+from rpython.rlib.jit import promote, elidable_promote
 from som.vmobjects.abstract_object import AbstractObject
 
 
@@ -76,8 +76,12 @@ class Object(AbstractObject):
         if index == 4: self._field5 = value; return
         self._fields[index - self.NUMBER_OF_DIRECT_FIELDS] = value
 
+    @elidable_promote("all")
+    def _get_domain(self):
+        return promote(self._domain)
+
     def get_domain(self, universe):
-        return self._domain
+        return self._get_domain()
 
     def set_domain(self, domain):
         self._domain = domain
