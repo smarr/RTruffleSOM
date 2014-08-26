@@ -20,7 +20,7 @@ def _invoke_on_with(ivkbl, rcvr, args, domain):
     assert isinstance(args[1], Array) or args[1] is ivkbl.get_universe().nilObject
 
     if args[1] is ivkbl.get_universe().nilObject:
-        direct_args = None
+        direct_args = []
     else:
         direct_args = args[1].get_indexable_fields()
     return rcvr.invoke_unenforced(args[0], direct_args, domain)
