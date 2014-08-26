@@ -94,6 +94,7 @@ class _AbstractCachedDomain(_AbstractEnforced):
     def __init__(self, field_idx, domain, domain_class, next_in_cache, universe):
         _AbstractEnforced.__init__(self)
         self._field_idx         = universe.new_integer(field_idx + 1)
+        assert domain is not None and isinstance(domain, Object)
         self._rcvr_domain       = domain
         self._rcvr_domain_class = domain_class
         self._next_in_cache     = self.adopt_child(next_in_cache)
