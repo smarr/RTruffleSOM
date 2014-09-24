@@ -18,7 +18,7 @@ class _Variable(object):
         return self._is_read
 
     def is_accessed_out_of_context(self):
-        return  self._is_read_out_of_context
+        return self._is_read_out_of_context
 
     def _mark_reading(self, context_level):
         self._is_read = True

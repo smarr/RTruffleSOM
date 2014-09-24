@@ -1,6 +1,6 @@
 from som.primitives.primitives import Primitives
 from som.vmobjects.abstract_object import AbstractObject
-from som.vmobjects.array import Array
+from som.vmobjects.array       import Array
 from som.vmobjects.primitive   import Primitive 
 
 

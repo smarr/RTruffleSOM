@@ -9,20 +9,20 @@ def get_printable_location(invokable, executing_domain):
     return invokable._source_section._identifier
 
 jitdriver = jit.JitDriver(
-     greens=['self', 'executing_domain'],
-     # virtualizables=['caller_frame'])
-      get_printable_location=get_printable_location,
-     reds= ['do_void', 'enforced', 'arguments', 'receiver'], #, 'frame'
+    greens=['self', 'executing_domain'],
+    # virtualizables=['caller_frame'])
+    get_printable_location=get_printable_location,
+    reds= ['do_void', 'enforced', 'arguments', 'receiver'], #, 'frame'
 
-     # the next line is a workaround around a likely bug in RPython
-     # for some reason, the inlining heuristics default to "never inline" when
-     # two different jit drivers are involved (in our case, the primitive
-     # driver, and this one).
+    # the next line is a workaround around a likely bug in RPython
+    # for some reason, the inlining heuristics default to "never inline" when
+    # two different jit drivers are involved (in our case, the primitive
+    # driver, and this one).
 
-     # the next line says that calls involving this jitdriver should always be
-     # inlined once (which means that things like Integer>>< will be inlined
-     # into a while loop again, when enabling this driver).
-     should_unroll_one_iteration = lambda self, executing_domain: True)
+    # the next line says that calls involving this jitdriver should always be
+    # inlined once (which means that things like Integer>>< will be inlined
+    # into a while loop again, when enabling this driver).
+    should_unroll_one_iteration = lambda self, executing_domain: True)
 
 
 class Invokable(Node):

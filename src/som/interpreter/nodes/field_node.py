@@ -94,7 +94,7 @@ def _make_field_write_node_class(field_idx):
 def _make_field_write_node_classes(count):
     return [_make_field_write_node_class(i + 1) for i in range(count)]
 
-    
+
 class UnenforcedFieldWriteNodeN(_AbstractUnenforcedFieldWriteNode):
     
     _immutable_fields_ = ["_extension_index"]
