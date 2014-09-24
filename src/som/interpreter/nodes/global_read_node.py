@@ -33,6 +33,9 @@ class UninitializedGlobalReadNodeUnenforced(AbstractUninitializedGlobalReadNode)
         cached = CachedGlobalReadNode(assoc, self.get_source_section())
         return self.replace(cached)
 
+    def execute_void(self, frame):
+        pass  # NOOP, because it is side-effect free
+
 
 class CachedGlobalReadNode(ExpressionNode):
 
