@@ -170,7 +170,7 @@ class Universe(object):
     
         if not got_classpath:
             # Get the default class path of the appropriate size
-            self.classpath = self._setup_default_classpath()
+            self.classpath = self._default_classpath()
 
         # check remaining args for class paths, and strip file extension
         i = 0
@@ -188,7 +188,8 @@ class Universe(object):
     def setup_classpath(self, cp):
         self.classpath = cp.split(os.pathsep)
 
-    def _setup_default_classpath(self):
+    @staticmethod
+    def _default_classpath():
         return ['.']
     
     # take argument of the form "../foo/Test.som" and return
