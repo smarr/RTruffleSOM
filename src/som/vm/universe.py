@@ -193,7 +193,8 @@ class Universe(object):
     
     # take argument of the form "../foo/Test.som" and return
     # "../foo", "Test", "som"
-    def _get_path_class_ext(self, path):
+    @staticmethod
+    def _get_path_class_ext(path):
         return path_split(path)
     
     def _print_usage_and_exit(self):
@@ -324,7 +325,8 @@ class Universe(object):
     
         return result
 
-    def new_block(self, method, context_frame, captured_enforced, domain):
+    @staticmethod
+    def new_block(method, context_frame, captured_enforced, domain):
         return Block(method, context_frame, captured_enforced, domain)
 
     def new_class(self, class_class, domain):
