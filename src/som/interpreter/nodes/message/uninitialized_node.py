@@ -1,14 +1,6 @@
 from .abstract_node import AbstractMessageNode
 from .generic_node  import GenericMessageNode
 
-from ..specialized.down_to_do_node import IntDownToIntDoNode, \
-    IntDownToDoubleDoNode
-from ..specialized.if_true_false import IfTrueIfFalseNode, \
-    IfNode
-from ..specialized.to_by_do_node import IntToIntByDoNode, \
-    IntToDoubleByDoNode
-from ..specialized.to_do_node import IntToIntDoNode, \
-    IntToDoubleDoNode
 from ..specialized.while_node import WhileMessageNode
 
 
@@ -21,12 +13,7 @@ class UninitializedMessageNode(AbstractMessageNode):
 
     def _specialize(self, frame, rcvr, args):
         if args:
-            for specialization in [WhileMessageNode,
-                                   IntToIntDoNode,   IntToDoubleDoNode,
-                                   IntToIntByDoNode, IntToDoubleByDoNode,
-                                   IntDownToIntDoNode, IntDownToDoubleDoNode,
-                                   IfTrueIfFalseNode,
-                                   IfNode]:
+            for specialization in [WhileMessageNode]:
                 if specialization.can_specialize(self._selector, rcvr, args,
                                                  self):
                     return specialization.specialize_node(self._selector, rcvr,
