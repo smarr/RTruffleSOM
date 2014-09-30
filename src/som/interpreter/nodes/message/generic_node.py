@@ -1,28 +1,10 @@
 from rpython.rlib.debug import make_sure_not_resized
 from rpython.rlib.jit import we_are_jitted
 
-from ..dispatch import SuperDispatchNode, UninitializedDispatchNode
 from .abstract_node import AbstractMessageNode
 
 
 class GenericMessageNode(AbstractMessageNode):
-
-    _immutable_fields_ = ['_dispatch?']
-    _child_nodes_      = ['_dispatch']
-
-    def __init__(self, selector, universe, rcvr_expr, arg_exprs,
-                 source_section = None):
-        AbstractMessageNode.__init__(self, selector, universe, rcvr_expr,
-                                     arg_exprs, source_section)
-        if rcvr_expr.is_super_node():
-            dispatch = SuperDispatchNode(selector, rcvr_expr.get_super_class(),
-                                         universe)
-        else:
-            dispatch = UninitializedDispatchNode(selector, universe)
-        self._dispatch = self.adopt_child(dispatch)
-
-    def replace_dispatch_list_head(self, node):
-        self._dispatch.replace(node)
 
     def execute(self, frame):
         rcvr, args = self._evaluate_rcvr_and_args(frame)
@@ -33,10 +15,7 @@ class GenericMessageNode(AbstractMessageNode):
         assert rcvr is not None
         assert args is not None
         make_sure_not_resized(args)
-        if we_are_jitted():
-            return self._direct_dispatch(rcvr, args)
-        else:
-            return self._dispatch.execute_dispatch(rcvr, args)
+        return self._direct_dispatch(rcvr, args)
 
     def _direct_dispatch(self, rcvr, args):
         method = self._lookup_method(rcvr)
