@@ -27,9 +27,7 @@ class MethodGenerationContext(object):
 
         self._embedded_block_methods = []
 
-        self._throws_non_local_return             = False
         self._needs_to_catch_non_local_returns    = False
-        self._accesses_variables_of_outer_context = False
 
         self._universe = universe
   
@@ -43,15 +41,10 @@ class MethodGenerationContext(object):
         return self._primitive
 
     def make_catch_non_local_return(self):
-        self._throws_non_local_return = True
         ctx = self._get_outer_context()
 
         assert ctx is not None
         ctx._needs_to_catch_non_local_returns = True
-
-    def requires_context(self):
-        return (self._throws_non_local_return or
-                self._accesses_variables_of_outer_context)
 
     def _get_outer_context(self):
         ctx = self._outer_genc
@@ -182,10 +175,7 @@ class MethodGenerationContext(object):
             return self._arguments[var_name]
 
         if self._outer_genc:
-            outer_var = self._outer_genc.get_variable(var_name)
-            if outer_var:
-                self._accesses_variables_of_outer_context = True
-                return outer_var
+            return self._outer_genc.get_variable(var_name)
         return None
 
     def get_local(self, var_name):
@@ -193,10 +183,7 @@ class MethodGenerationContext(object):
             return self._locals[var_name]
 
         if self._outer_genc:
-            outer_local = self._outer_genc.get_local(var_name)
-            if outer_local:
-                self._accesses_variables_of_outer_context = True
-                return outer_local
+            return self._outer_genc.get_local(var_name)
         return None
 
     def _get_self_read(self):
