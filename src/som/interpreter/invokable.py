@@ -3,6 +3,7 @@ from rpython.rlib.debug import make_sure_not_resized
 from rtruffle.node import Node
 
 from .frame import Frame
+from .control_flow import ReturnException
 
 
 def get_printable_location(invokable):
@@ -44,4 +45,14 @@ class Invokable(Node):
         frame = Frame(receiver, arguments, self._num_temps)
         jitdriver.jit_merge_point(self=self, receiver=receiver, arguments=arguments, frame=frame)
 
-        return self._expr_or_sequence.execute(frame)
+
+        marker = frame.get_on_stack_marker()
+        try:
+            return self._expr_or_sequence.execute(frame)
+        except ReturnException as e:
+            if not e.has_reached_target(marker):
+                raise e
+            else:
+                return e.get_result()
+        finally:
+            marker.mark_as_no_longer_on_stack()
