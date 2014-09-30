@@ -62,17 +62,6 @@ class MethodGenerationContext(object):
     def needs_to_catch_non_local_return(self):
         return self._needs_to_catch_non_local_returns
 
-    @staticmethod
-    def _separate_variables(variables, only_local_access,
-                            non_local_access):
-        for var in variables:
-            if var.is_accessed_out_of_context():
-                var.set_access_index(len(non_local_access))
-                non_local_access.append(var)
-            elif only_local_access is not None:
-                var.set_access_index(len(only_local_access))
-                only_local_access.append(var)
-
     def _add_argument_initialization(self, method_body):
         return method_body
         # TODO: see whether that has any for of benefit, or whether that is
@@ -88,26 +77,13 @@ class MethodGenerationContext(object):
         if self._primitive:
             return empty_primitive(self._signature.get_string(), self._universe)
 
-        # local_args     = []
-        non_local_args = []
-        local_tmps     = []
-        non_local_tmps = []
-        self._separate_variables([arg for arg in self._arguments.values()
-                                  if not arg.is_self()], None,
-                                 non_local_args)
-        self._separate_variables(self._locals.values(), local_tmps,
-                                 non_local_tmps)
-
-        arg_mapping = [arg.get_argument_index() for arg in non_local_args]
-
         if self.needs_to_catch_non_local_return():
             method_body = CatchNonLocalReturnNode(method_body,
                                                   method_body.get_source_section())
 
         method_body = self._add_argument_initialization(method_body)
         method = Invokable(self._get_source_section_for_method(method_body),
-                           method_body, arg_mapping, len(local_tmps),
-                           len(non_local_tmps), self._universe)
+                           method_body, len(self._locals), self._universe)
         return self._universe.new_method(self._signature, method,
                                          # copy list to make it immutable for RPython
                                          self._embedded_block_methods[:])
