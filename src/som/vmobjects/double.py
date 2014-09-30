@@ -33,8 +33,9 @@ class Double(AbstractObject):
         return universe.new_double(self._embedded_double * r)
 
     def prim_add(self, right, universe):
-        r = self._get_float(right)
-        return universe.new_double(self._embedded_double + r)
+        raise RuntimeError("TODO")
+        # r = self._get_float(right)
+        # return universe.new_double(self._embedded_double + r)
 
     def prim_bit_xor(self, right, universe):
         raise NotImplementedError("bit operations on Double are not supported.")

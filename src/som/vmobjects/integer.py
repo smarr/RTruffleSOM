@@ -45,21 +45,22 @@ class Integer(AbstractObject):
         return universe.new_string(str(self._embedded_integer))
 
     def prim_add(self, right, universe):
-        if isinstance(right, BigInteger):
-            return universe.new_biginteger(
-                right.get_embedded_biginteger().add(
-                    rbigint.fromint(self._embedded_integer)))
-        elif isinstance(right, Double):
-            return self._to_double(universe).prim_add(right, universe)
-        else:
-            l = self._embedded_integer
-            r = right.get_embedded_integer()
-            try:
-                result = ovfcheck(l + r)
-                return universe.new_integer(result)
-            except OverflowError:
-                return universe.new_biginteger(
-                    rbigint.fromint(l).add(rbigint.fromint(r)))
+        raise RuntimeError("TODO")
+        # if isinstance(right, BigInteger):
+        #     return universe.new_biginteger(
+        #         right.get_embedded_biginteger().add(
+        #             rbigint.fromint(self._embedded_integer)))
+        # elif isinstance(right, Double):
+        #     return self._to_double(universe).prim_add(right, universe)
+        # else:
+        #     l = self._embedded_integer
+        #     r = right.get_embedded_integer()
+        #     try:
+        #         result = ovfcheck(l + r)
+        #         return universe.new_integer(result)
+        #     except OverflowError:
+        #         return universe.new_biginteger(
+        #             rbigint.fromint(l).add(rbigint.fromint(r)))
 
     def prim_subtract(self, right, universe):
         if isinstance(right, BigInteger):

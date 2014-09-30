@@ -11,6 +11,8 @@ from ..specialized.to_do_node import IntToIntDoNode, \
     IntToDoubleDoNode
 from ..specialized.while_node import WhileMessageNode
 
+from ....primitives.arithmetic.addition import AdditionPrim
+
 
 class UninitializedMessageNode(AbstractMessageNode):
 
@@ -31,7 +33,7 @@ class UninitializedMessageNode(AbstractMessageNode):
                                    IntToIntByDoNode, IntToDoubleByDoNode,
                                    IntDownToIntDoNode, IntDownToDoubleDoNode,
                                    IfTrueIfFalseNode,
-                                   IfNode]:
+                                   IfNode, AdditionPrim]:
                 if specialization.can_specialize(self._selector, rcvr, args,
                                                  self):
                     return specialization.specialize_node(self._selector, rcvr,

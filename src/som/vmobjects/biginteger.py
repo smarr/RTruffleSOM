@@ -41,15 +41,16 @@ class BigInteger(AbstractObject):
         return universe.new_string(self._embedded_biginteger.str())
 
     def prim_add(self, right, universe):
-        if isinstance(right, BigInteger):
-            return universe.new_biginteger(
-                right.get_embedded_biginteger().add(self._embedded_biginteger))
-        elif isinstance(right, Double):
-            return self._to_double(universe).prim_add(right, universe)
-        else:
-            return universe.new_biginteger(
-                rbigint.fromint(right.get_embedded_integer()).add(
-                    self._embedded_biginteger))
+        raise RuntimeError("TODO")
+        # if isinstance(right, BigInteger):
+        #     return universe.new_biginteger(
+        #         right.get_embedded_biginteger().add(self._embedded_biginteger))
+        # elif isinstance(right, Double):
+        #     return self._to_double(universe).prim_add(right, universe)
+        # else:
+        #     return universe.new_biginteger(
+        #         rbigint.fromint(right.get_embedded_integer()).add(
+        #             self._embedded_biginteger))
 
     def prim_subtract(self, right, universe):
         if isinstance(right, BigInteger):

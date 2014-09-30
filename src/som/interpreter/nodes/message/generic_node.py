@@ -52,6 +52,12 @@ class GenericMessageNode(AbstractMessageNode):
         else:
             return self._dispatch.execute_dispatch(rcvr, args)
 
+    def execute_binary_evaluated(self, frame, rcvr, arg):
+        return self.execute_evaluated(frame, rcvr, [arg])
+
+    def execute_binary_evaluated_void(self, frame, rcvr, arg):
+        self.execute_evaluated_void(frame, rcvr, [arg])
+
     def _direct_dispatch(self, rcvr, args):
         method = self._lookup_method(rcvr)
         if method:

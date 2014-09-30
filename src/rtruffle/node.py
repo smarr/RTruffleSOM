@@ -2,6 +2,36 @@ from rpython.rlib.unroll import unrolling_iterable
 from rtruffle.source_section import SourceSection
 
 
+def specialization(rewrite_on = Exception):
+    """ Decorate a node method to indicate that it is a specialization.
+        At the moment, this is purely for documentation only.
+    """
+    def func_wrapper(func):
+        return func
+    return func_wrapper
+
+
+class UnsupportedSpecializationException(BaseException):
+    _immutable_fields_ = ['_args']
+
+    def __init__(self, args):
+        self._args = args
+
+
+class UnexpectedResultException(BaseException):
+    """ Exception used when a specialized node operation produces a result
+        that doesn't fit the specialized return type it has.
+    """
+
+    _immutable_fields_ = ['_result']
+
+    def __init__(self, result):
+        self._result = result
+
+    def get_result(self):
+        return self._result
+
+
 class AbstractNode(object):
     pass
 

@@ -26,7 +26,8 @@ def _sqrt(ivkbl, rcvr, args):
 
 
 def _plus(ivkbl, rcvr, args):
-    return rcvr.prim_add(args[0], ivkbl.get_universe())
+    raise RuntimeError("TODO")
+    #return rcvr.prim_add(args[0], ivkbl.get_universe())
 
 
 def _minus(ivkbl, rcvr, args):

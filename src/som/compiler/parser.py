@@ -1,14 +1,14 @@
 from rpython.rlib.rbigint import rbigint
 from rpython.rlib.rstring import ParseStringOverflowError
-from rtruffle.source_section import SourceSection
 
+from rtruffle.source_section import SourceSection
 from ..interpreter.nodes.block_node       import BlockNode, BlockNodeWithContext
 from ..interpreter.nodes.global_read_node import UninitializedGlobalReadNode
-from ..interpreter.nodes.literal_node     import LiteralNode
+from ..interpreter.nodes.literal_node     import LiteralNode, LiteralIntegerNode, \
+    LiteralDoubleNode, LiteralStringNode
 from ..interpreter.nodes.message.uninitialized_node import UninitializedMessageNode
 from ..interpreter.nodes.return_non_local_node import ReturnNonLocalNode
 from ..interpreter.nodes.sequence_node    import SequenceNode
-
 from .lexer                     import Lexer
 from .method_generation_context import MethodGenerationContext
 from .symbol                    import Symbol, symbol_as_str
@@ -518,17 +518,19 @@ class Parser(object):
             if negate_value:
                 i = 0 - i
             result = self._universe.new_integer(i)
+            self._expect(Symbol.Integer)
+            return LiteralIntegerNode(result)
         except ParseStringOverflowError:
             bigint = rbigint.fromstr(self._text)
             if negate_value:
                 bigint.sign = -1
             result = self._universe.new_biginteger(bigint)
+            self._expect(Symbol.Integer)
+            return LiteralNode(result)
         except ValueError:
             raise ParseError("Could not parse integer. "
                              "Expected a number but got '%s'" % self._text,
                              Symbol.NONE, self)
-        self._expect(Symbol.Integer)
-        return LiteralNode(result)
 
     def _literal_double(self, negate_value):
         try:
@@ -540,7 +542,7 @@ class Parser(object):
                              "Expected a number but got '%s'" % self._text,
                              Symbol.NONE, self)
         self._expect(Symbol.Double)
-        return LiteralNode(self._universe.new_double(f))
+        return LiteralDoubleNode(self._universe.new_double(f))
  
     def _literal_symbol(self):
         coord = self._lexer.get_source_coordinate()
@@ -560,7 +562,7 @@ class Parser(object):
         s = self._string()
      
         string = self._universe.new_string(s)
-        lit = LiteralNode(string)
+        lit = LiteralStringNode(string)
         return self._assign_source(lit, coord)
      
     def _selector(self):
