@@ -145,16 +145,10 @@ class LocalArgumentReadNode(_LocalVariableNode):
         return frame.get_argument(self._frame_idx)
 
 
-class LocalUnsharedTempReadNode(_LocalVariableNode):
+class LocalTempReadNode(_LocalVariableNode):
 
     def execute(self, frame):
         return frame.get_temp(self._frame_idx)
-
-
-class LocalSharedTempReadNode(_LocalVariableNode):
-
-    def execute(self, frame):
-        return frame.get_shared_temp(self._frame_idx)
 
 
 class LocalSelfReadNode(ExpressionNode):
@@ -206,13 +200,8 @@ class _LocalVariableWriteNode(_LocalVariableNode):
         return val
 
 
-class LocalSharedWriteNode(_LocalVariableWriteNode):
 
-    def _do_write(self, frame, value):
-        frame.set_shared_temp(self._frame_idx, value)
-
-
-class LocalUnsharedWriteNode(_LocalVariableWriteNode):
+class LocalWriteNode(_LocalVariableWriteNode):
 
     def _do_write(self, frame, value):
         frame.set_temp(self._frame_idx, value)
