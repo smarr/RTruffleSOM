@@ -28,12 +28,6 @@ class Frame(object):
         self._on_stack        = _FrameOnStackMarker()
         self._temps           = [nilObject] * num_temps
 
-    @jit.unroll_safe
-    def _collect_shared_args(self, arg_mapping):
-        if len(arg_mapping) == 0:
-            return _EMPTY_LIST
-        return [self._arguments[i] for i in arg_mapping]
-
     def get_context_values(self):
         return self._receiver, self._arguments, self._temps, self._on_stack
 
