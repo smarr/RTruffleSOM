@@ -26,9 +26,6 @@ class MethodGenerationContext(object):
 
         self._embedded_block_methods = []
 
-        self._throws_non_local_return             = False
-        self._accesses_variables_of_outer_context = False
-
         self._universe = universe
   
     def set_holder(self, cgenc):
@@ -39,13 +36,6 @@ class MethodGenerationContext(object):
 
     def is_primitive(self):
         return self._primitive
-
-    def make_catch_non_local_return(self):
-        self._throws_non_local_return = True
-
-    def requires_context(self):
-        return (self._throws_non_local_return or
-                self._accesses_variables_of_outer_context)
 
     def _get_outer_context(self):
         ctx = self._outer_genc
@@ -145,10 +135,7 @@ class MethodGenerationContext(object):
             return self._arguments[var_name]
 
         if self._outer_genc:
-            outer_var = self._outer_genc.get_variable(var_name)
-            if outer_var:
-                self._accesses_variables_of_outer_context = True
-                return outer_var
+            return self._outer_genc.get_variable(var_name)
         return None
 
     def get_local(self, var_name):
@@ -156,10 +143,7 @@ class MethodGenerationContext(object):
             return self._locals[var_name]
 
         if self._outer_genc:
-            outer_local = self._outer_genc.get_local(var_name)
-            if outer_local:
-                self._accesses_variables_of_outer_context = True
-                return outer_local
+            return self._outer_genc.get_local(var_name)
         return None
 
     def _get_self_read(self):

@@ -2,7 +2,7 @@ from rpython.rlib.rbigint import rbigint
 from rpython.rlib.rstring import ParseStringOverflowError
 from rtruffle.source_section import SourceSection
 
-from ..interpreter.nodes.block_node       import BlockNode, BlockNodeWithContext
+from ..interpreter.nodes.block_node       import BlockNodeWithContext
 from ..interpreter.nodes.global_read_node import UninitializedGlobalReadNode
 from ..interpreter.nodes.literal_node     import LiteralNode
 from ..interpreter.nodes.message.uninitialized_node import UninitializedMessageNode
@@ -337,7 +337,6 @@ class Parser(object):
         if mgenc.is_block_method():
             node = ReturnNonLocalNode(mgenc.get_outer_self_context_level(),
                                       exp, self._universe)
-            mgenc.make_catch_non_local_return()
             return self._assign_source(node, coord)
         else:
             return exp
@@ -408,10 +407,7 @@ class Parser(object):
             block_method = bgenc.assemble(block_body)
             mgenc.add_embedded_block_method(block_method)
 
-            if bgenc.requires_context():
-                result = BlockNodeWithContext(block_method, self._universe)
-            else:
-                result = BlockNode(block_method, self._universe)
+            result = BlockNodeWithContext(block_method, self._universe)
             return self._assign_source(result, coordinate)
 
         return self._literal()
