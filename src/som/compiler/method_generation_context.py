@@ -8,7 +8,6 @@ from ..interpreter.nodes.field_node            import create_write_node, \
                                                       create_read_node
 from ..interpreter.nodes.global_read_node      import \
     UninitializedGlobalReadNode
-from ..interpreter.nodes.return_non_local_node import CatchNonLocalReturnNode
 from ..interpreter.invokable                   import Invokable
 
 from ..vmobjects.primitive                     import empty_primitive
@@ -28,7 +27,6 @@ class MethodGenerationContext(object):
         self._embedded_block_methods = []
 
         self._throws_non_local_return             = False
-        self._needs_to_catch_non_local_returns    = False
         self._accesses_variables_of_outer_context = False
 
         self._universe = universe
@@ -44,10 +42,6 @@ class MethodGenerationContext(object):
 
     def make_catch_non_local_return(self):
         self._throws_non_local_return = True
-        ctx = self._get_outer_context()
-
-        assert ctx is not None
-        ctx._needs_to_catch_non_local_returns = True
 
     def requires_context(self):
         return (self._throws_non_local_return or
@@ -58,9 +52,6 @@ class MethodGenerationContext(object):
         while ctx._outer_genc is not None:
             ctx = ctx._outer_genc
         return ctx
-
-    def needs_to_catch_non_local_return(self):
-        return self._needs_to_catch_non_local_returns
 
     @staticmethod
     def _separate_variables(variables, only_local_access,
@@ -99,10 +90,6 @@ class MethodGenerationContext(object):
                                  non_local_tmps)
 
         arg_mapping = [arg.get_argument_index() for arg in non_local_args]
-
-        if self.needs_to_catch_non_local_return():
-            method_body = CatchNonLocalReturnNode(method_body,
-                                                  method_body.get_source_section())
 
         method_body = self._add_argument_initialization(method_body)
         method = Invokable(self._get_source_section_for_method(method_body),
