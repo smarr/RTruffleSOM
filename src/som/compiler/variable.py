@@ -1,10 +1,7 @@
 from som.interpreter.nodes.variable_read_node import UninitializedReadNode, \
-    UninitializedWriteNode, LocalSharedWriteNode, LocalUnsharedWriteNode, \
-    NonLocalArgumentReadNode, LocalSuperReadNode, \
+    UninitializedWriteNode, NonLocalArgumentReadNode, \
     NonLocalTempReadNode, NonLocalTempWriteNode, NonLocalSuperReadNode, \
-    LocalArgumentReadNode, LocalSelfReadNode, NonLocalSelfReadNode, \
-    UninitializedArgumentReadNode, LocalUnsharedTempReadNode, \
-    LocalSharedTempReadNode
+    NonLocalSelfReadNode, UninitializedArgumentReadNode
 
 
 class _Variable(object):
@@ -42,19 +39,13 @@ class Argument(_Variable):
 
     def get_read_node(self, context_level):
         self._mark_reading(context_level)
-        if context_level > 0:
-            if self._name == "self":
-                return NonLocalSelfReadNode(context_level, None)
-            else:
-                return UninitializedArgumentReadNode(self, context_level, None)
-        else:
-            if self._name == "self":
-                return LocalSelfReadNode(None)
-            else:
-                return LocalArgumentReadNode(self._arg_idx, None)
+        if self._name == "self":
+            return NonLocalSelfReadNode(context_level, None)
+        if context_level == 0:
+            self._access_idx = self._arg_idx
+        return UninitializedArgumentReadNode(self, context_level, None)
 
     def get_initialized_read_node(self, context_level, source_section):
-        assert context_level > 0
         assert self._access_idx >= 0
         return NonLocalArgumentReadNode(context_level, self._access_idx,
                                         source_section)
@@ -67,11 +58,8 @@ class Argument(_Variable):
         self._is_read = True
         if context_level > 0:
             self._is_read_out_of_context = True
-            return NonLocalSuperReadNode(context_level, holder_class_name,
-                                         on_class_side, universe)
-        else:
-            return LocalSuperReadNode(holder_class_name, on_class_side,
-                                      universe, None)
+        return NonLocalSuperReadNode(context_level, holder_class_name,
+                                     on_class_side, universe)
 
     def is_self(self):
         return self._name == "self"
@@ -100,15 +88,9 @@ class Local(_Variable):
         return UninitializedReadNode(self, context_level, None)
 
     def get_initialized_read_node(self, context_level, source_section):
-        if context_level > 0:
-            return NonLocalTempReadNode(context_level, self._access_idx,
-                                        source_section)
-        else:
-            if self.is_accessed_out_of_context():
-                return LocalSharedTempReadNode(self._access_idx, source_section)
-            else:
-                return LocalUnsharedTempReadNode(self._access_idx,
-                                                 source_section)
+        return NonLocalTempReadNode(context_level, self._access_idx,
+                                    self.is_accessed_out_of_context(),
+                                    source_section)
 
     def get_write_node(self, context_level, value_expr):
         self._is_written = True
@@ -118,13 +100,7 @@ class Local(_Variable):
 
     def get_initialized_write_node(self, context_level, value_expr,
                                    source_section):
-        if context_level > 0:
-            return NonLocalTempWriteNode(context_level, self._access_idx,
-                                         value_expr, source_section)
-        else:
-            if self.is_accessed_out_of_context():
-                return LocalSharedWriteNode(self._access_idx, value_expr,
-                                            source_section)
-            else:
-                return LocalUnsharedWriteNode(self._access_idx, value_expr,
-                                              source_section)
+        return NonLocalTempWriteNode(context_level, self._access_idx,
+                                     value_expr,
+                                     self.is_accessed_out_of_context(),
+                                     source_section)

@@ -60,20 +60,38 @@ class _NonLocalVariableNode(ContextualNode):
 class _NonLocalVariableReadNode(_NonLocalVariableNode):
 
     def execute(self, frame):
+        if self._context_level == 0:
+            return self._do_local_var_read(frame)
         block = self.determine_block(frame)
-        return self._do_var_read(block)
+        return self._do_nonlocal_var_read(block)
 
 
 class NonLocalArgumentReadNode(_NonLocalVariableReadNode):
 
-    def _do_var_read(self, block):
+    def _do_local_var_read(self, frame):
+        return frame.get_argument(self._frame_idx)
+
+    def _do_nonlocal_var_read(self, block):
         assert isinstance(block, Block)
         return block.get_context_argument(self._frame_idx)
 
 
 class NonLocalTempReadNode(_NonLocalVariableReadNode):
 
-    def _do_var_read(self, block):
+    _immutable_fields_ = ['_shared']
+
+    def __init__(self, context_level, frame_idx, shared, source_section):
+        _NonLocalVariableReadNode.__init__(self, context_level, frame_idx,
+                                           source_section)
+        self._shared = shared
+
+    def _do_local_var_read(self, frame):
+        if self._shared:
+            return frame.get_shared_temp(self._frame_idx)
+        else:
+            return frame.get_temp(self._frame_idx)
+
+    def _do_nonlocal_var_read(self, block):
         assert isinstance(block, Block)
         return block.get_context_temp(self._frame_idx)
 
@@ -84,6 +102,8 @@ class NonLocalSelfReadNode(ContextualNode):
         ContextualNode.__init__(self, context_level, source_section)
 
     def execute(self, frame):
+        if self._context_level == 0:
+            return frame.get_self()
         return self.determine_outer_self(frame)
 
 
@@ -114,105 +134,23 @@ class NonLocalSuperReadNode(NonLocalSelfReadNode):
 
 class NonLocalTempWriteNode(_NonLocalVariableNode):
 
-    _immutable_fields_ = ['_value_expr?']
+    _immutable_fields_ = ['_value_expr?', '_shared']
     _child_nodes_      = ['_value_expr']
 
-    def __init__(self, context_level, frame_idx, value_expr,
+    def __init__(self, context_level, frame_idx, value_expr, shared,
                  source_section = None):
         _NonLocalVariableNode.__init__(self, context_level, frame_idx,
                                        source_section)
         self._value_expr = self.adopt_child(value_expr)
+        self._shared = shared
 
     def execute(self, frame):
         value = self._value_expr.execute(frame)
-        self.determine_block(frame).set_context_temp(self._frame_idx, value)
+        if self._context_level == 0:
+            if self._shared:
+                frame.set_shared_temp(self._frame_idx, value)
+            else:
+                frame.set_temp(self._frame_idx, value)
+        else:
+            self.determine_block(frame).set_context_temp(self._frame_idx, value)
         return value
-
-
-class _LocalVariableNode(ExpressionNode):
-
-    _immutable_fields_ = ['_frame_idx']
-
-    def __init__(self, frame_idx, source_section):
-        ExpressionNode.__init__(self, source_section)
-        assert frame_idx >= 0
-        self._frame_idx = frame_idx
-
-
-class LocalArgumentReadNode(_LocalVariableNode):
-
-    def execute(self, frame):
-        return frame.get_argument(self._frame_idx)
-
-
-class LocalUnsharedTempReadNode(_LocalVariableNode):
-
-    def execute(self, frame):
-        return frame.get_temp(self._frame_idx)
-
-
-class LocalSharedTempReadNode(_LocalVariableNode):
-
-    def execute(self, frame):
-        return frame.get_shared_temp(self._frame_idx)
-
-
-class LocalSelfReadNode(ExpressionNode):
-
-    def execute(self, frame):
-        return frame.get_self()
-
-
-class LocalSuperReadNode(LocalSelfReadNode):
-
-    _immutable_fields_ = ['_super_class_name', '_on_class_side', '_universe']
-
-    def __init__(self, super_class_name, on_class_side, universe,
-                 source_section):
-        LocalSelfReadNode.__init__(self, source_section)
-        self._super_class_name = super_class_name
-        self._on_class_side    = on_class_side
-        self._universe         = universe
-
-    def is_super_node(self):
-        return True
-
-    @jit.elidable_promote('all')
-    def _get_lexical_super_class(self):
-        clazz = self._universe.get_global(self._super_class_name)
-        if self._on_class_side:
-            clazz = clazz.get_class(self._universe)
-        return clazz.get_super_class()
-
-    def is_super_node(self):
-        return True
-
-    def get_super_class(self):
-        return self._get_lexical_super_class()
-
-
-class _LocalVariableWriteNode(_LocalVariableNode):
-
-    _immutable_fields_ = ['_expr?']
-    _child_nodes_      = ['_expr']
-
-    def __init__(self, frame_idx, expr, source_section = None):
-        _LocalVariableNode.__init__(self, frame_idx, source_section)
-        self._expr = self.adopt_child(expr)
-
-    def execute(self, frame):
-        val = self._expr.execute(frame)
-        self._do_write(frame, val)
-        return val
-
-
-class LocalSharedWriteNode(_LocalVariableWriteNode):
-
-    def _do_write(self, frame, value):
-        frame.set_shared_temp(self._frame_idx, value)
-
-
-class LocalUnsharedWriteNode(_LocalVariableWriteNode):
-
-    def _do_write(self, frame, value):
-        frame.set_temp(self._frame_idx, value)
