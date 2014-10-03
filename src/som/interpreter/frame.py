@@ -20,11 +20,9 @@ _EMPTY_LIST = []
 class Frame(object):
         
     _immutable_fields_ = ['_receiver', '_arguments[*]', '_temps', '_on_stack']
-    _virtualizable_    = ['_temps[*]']
 
     def __init__(self, receiver, arguments, num_temps):
         make_sure_not_resized(arguments)
-        self = jit.hint(self, access_directly=True, fresh_virtualizable=True)
         self._receiver        = receiver
         self._arguments       = arguments
         self._on_stack        = _FrameOnStackMarker()
