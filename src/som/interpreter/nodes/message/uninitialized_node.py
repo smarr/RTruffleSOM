@@ -1,8 +1,6 @@
 from .abstract_node import AbstractMessageNode
 from .generic_node  import GenericMessageNode
 
-from ..specialized.down_to_do_node import IntDownToIntDoNode, \
-    IntDownToDoubleDoNode
 from ..specialized.if_true_false import IfTrueIfFalseNode, \
     IfNode
 from ..specialized.to_by_do_node import IntToIntByDoNode, \
@@ -24,7 +22,6 @@ class UninitializedMessageNode(AbstractMessageNode):
             for specialization in [WhileMessageNode,
                                    IntToIntDoNode,   IntToDoubleDoNode,
                                    IntToIntByDoNode, IntToDoubleByDoNode,
-                                   IntDownToIntDoNode, IntDownToDoubleDoNode,
                                    IfTrueIfFalseNode,
                                    IfNode]:
                 if specialization.can_specialize(self._selector, rcvr, args,
