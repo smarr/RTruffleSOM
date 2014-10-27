@@ -1,5 +1,3 @@
-from rpython.rlib import jit
-
 from som.vmobjects.abstract_object import AbstractObject
 from som.vmobjects.primitive import Primitive
 
@@ -25,24 +23,21 @@ class Block(AbstractObject):
                 self._outer_on_stack == other_block._outer_on_stack)
 
     def get_method(self):
-        return jit.promote(self._method)
+        return self._method
     
     def get_context_argument(self, index):
-        jit.promote(index)
         args = self._outer_args
         assert 0 <= index < len(args)
         assert args is not None
         return args[index]
 
     def get_context_temp(self, index):
-        jit.promote(index)
         temps = self._outer_tmps
         assert 0 <= index < len(temps)
         assert temps is not None
         return temps[index]
 
     def set_context_temp(self, index, value):
-        jit.promote(index)
         temps = self._outer_tmps
         assert 0 <= index < len(temps)
         assert temps is not None

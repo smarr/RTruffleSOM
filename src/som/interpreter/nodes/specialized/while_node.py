@@ -1,10 +1,7 @@
-from rpython.rlib import jit
-
 from ..expression_node import ExpressionNode
 from som.vm.globals import nilObject, falseObject, trueObject
 
 from ....vmobjects.block  import Block
-from ....vmobjects.method import Method
 
 
 class AbstractWhileMessageNode(ExpressionNode):
@@ -28,15 +25,6 @@ class AbstractWhileMessageNode(ExpressionNode):
         self._do_while(rcvr_value, body_block)
         return nilObject
 
-# def get_printable_location_while_value(body_method, node):
-#     assert isinstance(body_method, Method)
-#     return "while_value: %s" % body_method.merge_point_string()
-#
-# while_value_driver = jit.JitDriver(
-#     greens=['body_method', 'node'], reds='auto',
-#     get_printable_location = get_printable_location_while_value)
-#
-#
 # class WhileWithValueReceiver(AbstractWhileMessageNode):
 #
 #     def execute_evaluated(self, frame, rcvr_value, body_block):
@@ -48,20 +36,6 @@ class AbstractWhileMessageNode(ExpressionNode):
 #             while_value_driver.jit_merge_point(body_method = body_method,
 #                                                node        = self)
 #             body_method.invoke(body_block, None)
-
-
-def get_printable_location_while(body_method, condition_method, while_type):
-    assert isinstance(condition_method, Method)
-    assert isinstance(body_method, Method)
-
-    return "%s while %s: %s" % (condition_method.merge_point_string(),
-                                while_type,
-                                body_method.merge_point_string())
-
-
-while_driver = jit.JitDriver(
-    greens=['body_method', 'condition_method', 'node'], reds='auto',
-    get_printable_location = get_printable_location_while)
 
 
 class WhileMessageNode(AbstractWhileMessageNode):
@@ -78,14 +52,6 @@ class WhileMessageNode(AbstractWhileMessageNode):
             rcvr_block = body_block
 
         while True:
-            while_driver.jit_merge_point(body_method     = body_method,
-                                         condition_method= condition_method,
-                                         node            = self)
-
-            # STEFAN: looks stupid but might help the jit
-            if rcvr_block is body_block:
-                rcvr_block = body_block
-
             condition_value = condition_method.invoke(rcvr_block, [])
             if condition_value is not self._predicate_bool:
                 break

@@ -1,7 +1,6 @@
 from .contextual_node import ContextualNode
 from .expression_node import ExpressionNode
 
-from rpython.rlib import jit
 from som.vmobjects.block import Block
 
 
@@ -108,7 +107,6 @@ class NonLocalSuperReadNode(NonLocalSelfReadNode):
         self._on_class_side    = on_class_side
         self._universe         = universe
 
-    @jit.elidable_promote('all')
     def _get_lexical_super_class(self):
         clazz = self._universe.get_global(self._super_class_name)
         if self._on_class_side:

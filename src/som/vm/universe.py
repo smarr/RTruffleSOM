@@ -1,8 +1,4 @@
-from rpython.rlib.debug import make_sure_not_resized
 from rpython.rlib.rrandom import Random
-from rpython.rlib import jit
-import os
-import time
 from som.vm.globals import nilObject, trueObject, falseObject
 
 from som.vmobjects.object        import Object
@@ -275,10 +271,6 @@ class Universe(object):
         self._object_system_initialized = True
         return system_object
 
-    def is_object_system_initialized(self):
-        return self._object_system_initialized
-
-    @jit.elidable
     def symbol_for(self, string):
         # Lookup the symbol in the symbol table
         result = self._symbol_table.get(string, None)
@@ -293,7 +285,6 @@ class Universe(object):
         return Array.from_size(length)
   
     def new_array_from_list(self, values):
-        make_sure_not_resized(values)
         return Array.from_values(values)
 
     def new_array_with_strings(self, strings):
@@ -388,25 +379,21 @@ class Universe(object):
     def get_global(self, name):
         # Return the global with the given name if it's in the dictionary of globals
         # if not, return None
-        jit.promote(self)
         assoc = self._get_global(name)
         if assoc:
             return assoc.get_value()
         else:
             return None
 
-    @jit.elidable
     def _get_global(self, name):
         return self._globals.get(name, None)
 
     def set_global(self, name, value):
         self.get_globals_association(name).set_value(value)
 
-    @jit.elidable_promote("all")
     def has_global(self, name):
         return name in self._globals
 
-    @jit.elidable_promote("all")
     def get_globals_association(self, name):
         assoc = self._globals.get(name, None)
         if assoc is None:

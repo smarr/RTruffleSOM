@@ -1,17 +1,6 @@
-from rpython.rlib.jit import JitDriver
 from rpython.rlib.objectmodel import instantiate
 from .abstract_object import AbstractObject
 from som.vm.globals import nilObject
-from som.vmobjects.method import Method
-
-
-def put_all_obj_pl(block_method):
-    assert isinstance(block_method, Method)
-    return "#putAll: (obj_strategy) %s" % block_method.merge_point_string()
-
-
-put_all_obj_driver  = JitDriver(greens=['block_method'], reds='auto',
-                                get_printable_location=put_all_obj_pl)
 
 
 class Array(AbstractObject):

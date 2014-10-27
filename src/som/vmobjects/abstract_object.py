@@ -1,6 +1,3 @@
-from rpython.rlib import jit
-
-
 class AbstractObject(object):
     
     def __init__(self):
@@ -12,11 +9,8 @@ class AbstractObject(object):
         return invokable.invoke(self, arguments)
 
     @staticmethod
-    # @jit.unroll_safe
     def _prepare_dnu_arguments(arguments, selector, universe):
         # Compute the number of arguments
-        selector = jit.promote(selector)
-        universe = jit.promote(universe)
         number_of_arguments = selector.get_number_of_signature_arguments() - 1 ## without self
         assert number_of_arguments == len(arguments)
 

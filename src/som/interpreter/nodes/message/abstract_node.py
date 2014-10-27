@@ -1,6 +1,3 @@
-from rpython.rlib.debug import make_sure_not_resized
-from rpython.rlib.jit   import unroll_safe
-
 from ..expression_node import ExpressionNode
 
 from ....vmobjects.abstract_object import AbstractObject
@@ -18,11 +15,9 @@ class AbstractMessageNode(ExpressionNode):
         self._selector = selector
         self._universe = universe
         assert arg_exprs is not None
-        make_sure_not_resized(arg_exprs)
         self._rcvr_expr = self.adopt_child(rcvr_expr)
         self._arg_exprs = self.adopt_children(arg_exprs)
 
-    @unroll_safe
     def _evaluate_rcvr_and_args(self, frame):
         rcvr = self._rcvr_expr.execute(frame)
         assert isinstance(rcvr, AbstractObject)

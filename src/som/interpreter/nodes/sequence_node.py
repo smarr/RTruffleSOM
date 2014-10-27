@@ -1,7 +1,5 @@
 from .expression_node import ExpressionNode
 
-from rpython.rlib.jit import unroll_safe
-
 
 class SequenceNode(ExpressionNode):
 
@@ -16,7 +14,6 @@ class SequenceNode(ExpressionNode):
         self._execute_all_but_last(frame)
         return self._exprs[-1].execute(frame)
 
-    @unroll_safe
     def _execute_all_but_last(self, frame):
         for i in range(0, len(self._exprs) - 1):
             self._exprs[i].execute(frame)

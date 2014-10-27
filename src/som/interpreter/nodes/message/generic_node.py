@@ -1,5 +1,3 @@
-from rpython.rlib.debug import make_sure_not_resized
-
 from .abstract_node import AbstractMessageNode
 
 
@@ -13,7 +11,6 @@ class GenericMessageNode(AbstractMessageNode):
         assert frame is not None
         assert rcvr is not None
         assert args is not None
-        make_sure_not_resized(args)
         return self._direct_dispatch(rcvr, args)
 
     def _direct_dispatch(self, rcvr, args):

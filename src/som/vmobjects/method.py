@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-from rpython.rlib import jit
-
 from som.vmobjects.abstract_object import AbstractObject
 
 
@@ -44,7 +42,6 @@ class Method(AbstractObject):
         for method in self._embedded_block_methods:
             method.set_holder(value)
 
-    @jit.elidable_promote('all')
     def get_number_of_arguments(self):
         return self.get_signature().get_number_of_signature_arguments()
 

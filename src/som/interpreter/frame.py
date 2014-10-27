@@ -1,5 +1,3 @@
-from rpython.rlib import jit
-from rpython.rlib.debug import make_sure_not_resized
 from som.vm.globals import nilObject
 
 
@@ -22,7 +20,6 @@ class Frame(object):
     _immutable_fields_ = ['_receiver', '_arguments[*]', '_temps', '_on_stack']
 
     def __init__(self, receiver, arguments, num_temps):
-        make_sure_not_resized(arguments)
         self._receiver        = receiver
         self._arguments       = arguments
         self._on_stack        = _FrameOnStackMarker()
@@ -32,21 +29,18 @@ class Frame(object):
         return self._receiver, self._arguments, self._temps, self._on_stack
 
     def get_argument(self, index):
-        jit.promote(index)
         return self._arguments[index]
 
     def set_argument(self, index, value):
         self._arguments[index] = value
 
     def get_temp(self, index):
-        jit.promote(index)
         temps = self._temps
         assert 0 <= index < len(temps)
         assert temps is not None
         return temps[index]
 
     def set_temp(self, index, value):
-        jit.promote(index)
         temps = self._temps
         assert temps is not None
         assert 0 <= index < len(temps)

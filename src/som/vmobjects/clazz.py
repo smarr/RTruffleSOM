@@ -1,6 +1,4 @@
-from rpython.rlib import jit
 from som.vm.globals import nilObject
-from som.vmobjects.array import Array
 from som.vmobjects.object import Object
 
 
@@ -72,7 +70,6 @@ class Class(Object):
         value.set_holder(self)
         self.get_instance_invokables().set_indexable_field(index, value)
 
-    @jit.elidable_promote("all")
     def lookup_invokable(self, signature):
         # Lookup invokable and return if found
         invokable = self._invokables_table.get(signature, None)

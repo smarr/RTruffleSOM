@@ -1,7 +1,5 @@
 from .expression_node import ExpressionNode
 
-from rpython.rlib.jit import unroll_safe
-
 
 class ContextualNode(ExpressionNode):
 
@@ -18,7 +16,6 @@ class ContextualNode(ExpressionNode):
     def accesses_outer_context(self):
         return self._context_level > 0
 
-    @unroll_safe
     def determine_block(self, frame):
         assert self._context_level > 0
 
@@ -27,7 +24,6 @@ class ContextualNode(ExpressionNode):
             block = block.get_outer_self()
         return block
 
-    @unroll_safe
     def determine_outer_self(self, frame):
         outer_self = frame.get_self()
         for i in range(0, self._context_level):
