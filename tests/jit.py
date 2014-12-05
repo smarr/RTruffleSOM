@@ -266,3 +266,10 @@ class TestLLtype(LLJitMixin):
               py.path.local(__file__).dirpath().dirpath().join(
               "Examples/Benchmarks").strpath)
         self._eval_expr("""IntegerLoop benchmark""", cp)
+    
+    def test_unequals(self):
+        cp = (py.path.local(__file__).dirpath().dirpath().join(
+              "Smalltalk").strpath + ":" +
+              py.path.local(__file__).dirpath().dirpath().join(
+              "Examples/Benchmarks").strpath)
+        self._eval_expr("""PointerInequality new benchmark""", cp)

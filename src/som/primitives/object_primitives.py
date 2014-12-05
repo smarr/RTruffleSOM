@@ -16,6 +16,15 @@ def _equals(ivkbl, rcvr, args):
         return ivkbl.get_universe().falseObject
 
 
+def _unequals(ivkbl, rcvr, args):
+    op1 = args[0]
+    op2 = rcvr
+    if op1 is not op2:
+        return ivkbl.get_universe().trueObject
+    else:
+        return ivkbl.get_universe().falseObject
+
+
 def _hashcode(ivkbl, rcvr, args):
     return ivkbl.get_universe().new_integer(
         compute_identity_hash(rcvr))
@@ -86,6 +95,7 @@ class ObjectPrimitives(Primitives):
     
     def install_primitives(self):
         self._install_instance_primitive(Primitive("==", self._universe, _equals))
+        self._install_instance_primitive(Primitive("~=", self._universe, _unequals))
         self._install_instance_primitive(Primitive("hashcode", self._universe, _hashcode))
         self._install_instance_primitive(Primitive("objectSize", self._universe, _objectSize))
         self._install_instance_primitive(Primitive("perform:", self._universe, _perform))

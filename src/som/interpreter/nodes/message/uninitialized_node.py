@@ -1,5 +1,6 @@
 from .abstract_node import AbstractMessageNode
 from .generic_node  import GenericMessageNode
+from som.interpreter.nodes.specialized.repeat_until_node import RepeatUntilNode
 
 from ..specialized.down_to_do_node import IntDownToIntDoNode, \
     IntDownToDoubleDoNode
@@ -26,7 +27,7 @@ class UninitializedMessageNode(AbstractMessageNode):
                                    IntToIntByDoNode, IntToDoubleByDoNode,
                                    IntDownToIntDoNode, IntDownToDoubleDoNode,
                                    IfTrueIfFalseNode,
-                                   IfNode]:
+                                   IfNode, RepeatUntilNode]:
                 if specialization.can_specialize(self._selector, rcvr, args,
                                                  self):
                     return specialization.specialize_node(self._selector, rcvr,
