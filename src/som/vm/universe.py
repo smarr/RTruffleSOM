@@ -54,6 +54,7 @@ class Universe(object):
             "metaclassClass",
             "nilClass",
             "integerClass",
+            "integerArrayClass",
             "arrayClass",
             "methodClass",
             "symbolClass",
@@ -81,6 +82,7 @@ class Universe(object):
         self.nilClass       = None
         self.integerClass   = None
         self.arrayClass     = None
+        self.integerArrayClass = None
         self.methodClass    = None
         self.symbolClass    = None
         self.primitiveClass = None
@@ -213,6 +215,7 @@ class Universe(object):
         self.nilClass        = self.new_system_class()
         self.classClass      = self.new_system_class()
         self.arrayClass      = self.new_system_class()
+        self.integerArrayClass = self.new_system_class()
         self.symbolClass     = self.new_system_class()
         self.methodClass     = self.new_system_class()
         self.integerClass    = self.new_system_class()
@@ -229,6 +232,7 @@ class Universe(object):
         self._initialize_system_class(self.metaclassClass,   self.classClass, "Metaclass")
         self._initialize_system_class(self.nilClass,        self.objectClass, "Nil")
         self._initialize_system_class(self.arrayClass,      self.objectClass, "Array")
+        self._initialize_system_class(self.integerArrayClass, self.arrayClass, "IntegerArray")
         self._initialize_system_class(self.methodClass,     self.objectClass, "Method")
         self._initialize_system_class(self.integerClass,    self.objectClass, "Integer")
         self._initialize_system_class(self.primitiveClass,  self.objectClass, "Primitive")
@@ -242,6 +246,7 @@ class Universe(object):
         self._load_system_class(self.metaclassClass)
         self._load_system_class(self.nilClass)
         self._load_system_class(self.arrayClass)
+        self._load_system_class(self.integerArrayClass)
         self._load_system_class(self.methodClass)
         self._load_system_class(self.symbolClass)
         self._load_system_class(self.integerClass)
