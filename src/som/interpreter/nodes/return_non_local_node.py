@@ -1,5 +1,4 @@
 from .contextual_node import ContextualNode
-from .expression_node import ExpressionNode
 
 from ..control_flow   import ReturnException
 

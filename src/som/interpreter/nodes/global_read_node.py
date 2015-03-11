@@ -1,5 +1,4 @@
 from .expression_node import ExpressionNode
-from som.vm.globals import nilObject, trueObject, falseObject
 
 
 class UninitializedGlobalReadNode(ExpressionNode):

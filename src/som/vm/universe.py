@@ -14,15 +14,8 @@ from som.vmobjects.string        import String
 from som.vmobjects.block         import Block, block_evaluation_primitive
 from som.vmobjects.biginteger    import BigInteger
 from som.vmobjects.double        import Double
-
 from som.vm.shell import Shell
-
 import som.compiler.sourcecode_compiler as sourcecode_compiler
-
-import os
-import time
-
-
 from rlib.exit  import Exit
 from rlib.osext import path_split
 

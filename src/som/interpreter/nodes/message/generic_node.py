@@ -1,5 +1,4 @@
 from rpython.rlib.debug import make_sure_not_resized
-from rpython.rlib.jit import we_are_jitted
 
 from .abstract_node import AbstractMessageNode
 

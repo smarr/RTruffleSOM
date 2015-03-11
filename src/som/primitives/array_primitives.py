@@ -1,6 +1,3 @@
-from rpython.rlib import jit
-from som.vmobjects.block import Block
-from som.vmobjects.method import Method
 from som.vmobjects.primitive   import Primitive
 from som.primitives.primitives import Primitives
 

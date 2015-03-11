@@ -1,4 +1,3 @@
-from rpython.rlib.jit import we_are_jitted
 from .expression_node import ExpressionNode
 
 from som.vmobjects.abstract_object import AbstractObject
