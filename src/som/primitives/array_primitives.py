@@ -82,9 +82,7 @@ def _putAll(ivkbl, rcvr, args):
         rcvr.set_all_with_block(arg)
         return rcvr
 
-    ## It is a simple value, just put it into the array
-
-    ## TODO: move to array, and adapt to use strategies
+    # It is a simple value, just put it into the array
     rcvr.set_all(arg)
     return rcvr
 
