@@ -9,6 +9,7 @@ from som.vmobjects.biginteger import BigInteger
 from som.vmobjects.primitive   import Primitive
 from som.vmobjects.integer     import Integer
 from som.vmobjects.string      import String
+import math
 
 
 def _asString(ivkbl, rcvr, args):
