@@ -1,6 +1,3 @@
-from rpython.rlib import jit
-from som.vmobjects.block import Block
-from som.vmobjects.method import Method
 from som.vmobjects.primitive   import Primitive
 from som.primitives.primitives import Primitives
 
@@ -34,19 +31,6 @@ def _copy(ivkbl, rcvr, args):
     return rcvr.copy()
 
 
-def _putAll(ivkbl, rcvr, args):
-    arg = args[0]
-    if isinstance(arg, Block):
-        rcvr.set_all_with_block(arg)
-        return rcvr
-
-    ## It is a simple value, just put it into the array
-
-    ## TODO: move to array, and adapt to use strategies
-    rcvr.set_all(arg)
-    return rcvr
-
-
 class ArrayPrimitives(Primitives):
 
     def install_primitives(self):
@@ -54,6 +38,5 @@ class ArrayPrimitives(Primitives):
         self._install_instance_primitive(Primitive("at:put:", self._universe, _atPut))
         self._install_instance_primitive(Primitive("length",  self._universe, _length))
         self._install_instance_primitive(Primitive("copy",    self._universe, _copy))
-        self._install_instance_primitive(Primitive("putAll:", self._universe, _putAll))
 
         self._install_class_primitive(Primitive("new:",       self._universe, _new))
