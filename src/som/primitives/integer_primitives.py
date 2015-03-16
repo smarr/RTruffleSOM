@@ -172,8 +172,11 @@ def _to(ivkbl, rcvr, args):
     assert isinstance(rcvr, Integer)
     arg = args[0]
     assert isinstance(arg, Integer)
-    return Array.from_integers(range(rcvr.get_embedded_integer(),
-        arg.get_embedded_integer() + 1))
+    universe = ivkbl.get_universe()
+    arr = [universe.new_integer(i)
+           for i in range(rcvr.get_embedded_integer(),
+                          arg.get_embedded_integer() + 1)]
+    return Array.from_values(arr)
 
 
 def _max(ivkbl, rcvr, args):
