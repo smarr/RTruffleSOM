@@ -41,14 +41,14 @@ class Argument(_Variable):
         self._mark_reading(context_level)
         if self._name == "self":
             return NonLocalSelfReadNode(context_level, None)
-        if context_level == 0:
-            self._access_idx = self._arg_idx
         return UninitializedArgumentReadNode(self, context_level, None)
 
     def get_initialized_read_node(self, context_level, source_section):
-        assert self._access_idx >= 0
-        return NonLocalArgumentReadNode(context_level, self._access_idx,
-                                        source_section)
+        if context_level == 0:
+            idx = self._arg_idx
+        else:
+            idx = self._access_idx
+        return NonLocalArgumentReadNode(context_level, idx, source_section)
 
     def get_argument_index(self):
         return self._arg_idx
