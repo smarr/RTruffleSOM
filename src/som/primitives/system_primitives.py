@@ -4,7 +4,6 @@ from som.vmobjects.primitive   import Primitive
 
 from som.vm.universe import std_print, std_println
 
-from rpython.rlib import rgc, jit
 import time
 
 
@@ -60,9 +59,7 @@ def _ticks(ivkbl, rcvr, args):
     return ivkbl.get_universe().new_integer(int(since_start * 1000000))
 
 
-@jit.dont_look_inside
 def _fullGC(ivkbl, rcvr, args):
-    rgc.collect()
     return trueObject
 
 
